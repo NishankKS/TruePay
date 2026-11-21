@@ -21,15 +21,14 @@ String actOf(String? scenario, Map<String, dynamic> layers) => switch (scenario)
     };
 
 const banners = {
-  'idle': ('Ready', 'Pick an act on the left to start.'),
-  '0': ('Act 0 · Life without ibanned',
-      "Today's invoice automation. ibanned is not involved."),
-  '1': ('Act 1 · A clean invoice', 'Müller Bürobedarf, €4,280. Every check should pass.'),
-  '2': ('Act 2 · A poisoned invoice', 'Hidden instructions for the AI, invisible to people.'),
-  '3': ('Act 3 · The same invoice, now with ibanned', 'The IBAN swap from Act 0 meets the crew.'),
-  '4': ('Act 4 · A compromised insider component', "An attacker controls the onboarding component's code."),
-  '5': ('Act 5 · AI defenses off, controller jailbroken', 'Assume breach: only the firewall and the human remain.'),
-  'judge': ('Extra run', 'A custom invoice.'),
+  'idle': ('Ready', 'Select a scenario to start a run.'),
+  '0': ('Legacy AP automation', "Today's process: the IBAN printed on the invoice is paid after a TAN. No controls."),
+  '1': ('INV-1001 · Standard invoice', 'Expected: every check passes, one approval, paid.'),
+  '2': ('INV-1002 · Prompt injection', 'Hidden instructions for the AI, invisible to people.'),
+  '3': ('INV-1003 · IBAN substitution', 'Same invoice as the legacy run, now through the agents and firewall.'),
+  '4': ('Compromised service identity', 'The onboarding service calls the firewall directly with its own token.'),
+  '5': ('Jailbroken controller', 'L1–L3 disabled and the controller follows the invoice. Only the firewall remains.'),
+  'judge': ('Custom invoice', 'INV-1099'),
 };
 
 /// Rough number of events per act, for the progress bar while a run is in flight.
@@ -181,11 +180,23 @@ class Sidebar extends StatefulWidget {
   State<Sidebar> createState() => _SidebarState();
 }
 
+const scenarioIcons = {
+  'legacy': Icons.history_rounded, 'clean': Icons.receipt_long_rounded, 'inject': Icons.visibility_off_rounded,
+  'swap': Icons.swap_horiz_rounded, 'insider': Icons.vpn_key_off_rounded, 'jailbreak': Icons.psychology_alt_rounded,
+  'custom': Icons.edit_note_rounded,
+};
+
 class _SidebarState extends State<Sidebar> {
+  bool demo = true; // cached agent responses, ~10-15 s per run
   /// One click per act: set the layer switches the act needs, then queue the command (rules allow both).
   Future<void> run(Scenario s) async {
     await db.doc('config/layers').update(Map<String, Object>.from(s.act == '5' ? breachLayers : defaultLayers));
-    await db.collection('commands').add({'scenario': s.key, 'status': 'NEW', 'created_at': FieldValue.serverTimestamp()});
+    await db.collection('commands').add({
+      'scenario': s.key,
+      'status': 'NEW',
+      'created_at': FieldValue.serverTimestamp(),
+      if (demo) 'note': 'demo',
+    });
   }
 
   Widget _scenario(Scenario s) {
@@ -217,7 +228,7 @@ class _SidebarState extends State<Sidebar> {
                 ),
                 child: active
                     ? spinner(size: 15, c: dim ? cActive : Colors.white)
-                    : Text(s.button, style: sans(size: 14, w: FontWeight.w600, c: s.act == '0' ? cMuted : (s.act == '5' ? cBlock : Colors.white))),
+                    : Icon(scenarioIcons[s.button], size: 18, color: s.act == '0' ? cMuted : (s.act == '5' ? cBlock : Colors.white)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -250,7 +261,23 @@ class _SidebarState extends State<Sidebar> {
               Text('No fake IBAN gets paid', style: sans(size: 12.5, c: cMuted)),
             ]),
           ]),
-          overline('Demo'),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
+            decoration: BoxDecoration(color: demo ? cActiveTint : cIdleTint, borderRadius: BorderRadius.circular(12)),
+            child: Row(children: [
+              Icon(demo ? Icons.bolt_rounded : Icons.cloud_rounded, size: 18, color: demo ? cActive : cMuted),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(demo ? 'Demo mode' : 'Live agents', style: sans(size: 13.5, w: FontWeight.w600)),
+                  Text(demo ? 'Cached agent responses · ~15 s' : 'Gemini · Model Armor · Gemma', style: sans(size: 12, c: cMuted)),
+                ]),
+              ),
+              Transform.scale(scale: 0.85, child: Switch(value: demo, onChanged: widget.busy ? null : (v) => setState(() => demo = v))),
+            ]),
+          ),
+          overline('Scenarios'),
           for (final s in scenarioButtons) _scenario(s),
           const SizedBox(height: 14),
           OutlinedButton.icon(
@@ -381,12 +408,12 @@ class Pipeline extends StatelessWidget {
   const Pipeline({super.key, required this.runId, required this.act, required this.running});
 
   String label(String n) => switch (n) {
-        'intake' => act == '0' ? 'Invoice automation' : 'Intake',
-        'controller' => act == '4' ? 'Onboarding' : 'Controller',
+        'intake' => act == '0' ? 'Legacy automation' : 'Intake',
+        'controller' => act == '4' ? 'Onboarding svc' : 'Controller',
         'investigator' => 'Investigator',
-        'vendor' => 'Müller agent',
+        'vendor' => 'Vendor agent',
         'firewall' => 'Firewall',
-        'human' => 'Human',
+        'human' => 'Approver',
         _ => 'Bank',
       };
 
@@ -546,7 +573,7 @@ class _Node extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       Text(label, style: sans(size: 12.5, w: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
-      Text(notInstalled ? 'Not installed' : (dashed && ev == null ? 'A2A · idle' : (ev?['title'] ?? 'Idle')),
+      Text(notInstalled ? '—' : (dashed && ev == null ? 'A2A' : (ev?['title'] ?? '—')),
           maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: sans(size: 11, c: cMuted)),
     ]);
   }
@@ -554,9 +581,9 @@ class _Node extends StatelessWidget {
 
 // ---------------------------------------------------------------- agent progress (step list)
 const actorNames = {
-  'baseline': 'Invoice automation', 'intake': 'Intake', 'sentinel': 'Gemma Sentinel', 'model_armor': 'Model Armor',
-  'controller': 'Controller', 'investigator': 'Investigator', 'onboarding': 'Onboarding component',
-  'vendor_agent': "Müller's agent", 'firewall': 'Action Firewall', 'human': 'CFO', 'bank': 'Bank',
+  'baseline': 'Legacy automation', 'intake': 'Intake', 'sentinel': 'Gemma Sentinel', 'model_armor': 'Model Armor',
+  'controller': 'Controller', 'investigator': 'Investigator', 'onboarding': 'Onboarding service',
+  'vendor_agent': 'Vendor agent (A2A)', 'firewall': 'Policy firewall', 'human': 'Approver', 'bank': 'Bank',
 };
 
 class AgentProgress extends StatelessWidget {
@@ -856,7 +883,7 @@ class _RightCard extends StatelessWidget {
 
   Widget mirror(Widget phoneCard) => panel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          sectionTitle("On the CFO's phone", trailing: chip('MIRRORED', cActive, cActiveTint)),
+          sectionTitle('Approver device', trailing: chip('MIRRORED', cActive, cActiveTint)),
           phoneCard,
         ]),
       );
@@ -876,7 +903,7 @@ class _RightCard extends StatelessWidget {
                   row('IBAN', Text('DE39 9999 9999 0012 3456 78', style: mono())),
                   row('Amount', Text('€18,950.00', style: sans(w: FontWeight.w700))),
                   const SizedBox(height: 6),
-                  Text('Today’s automation takes the IBAN printed on the invoice. No vendor check runs.', style: sans(size: 13, c: cMuted)),
+                  Text('Pays the IBAN printed on the invoice. No vendor check.', style: sans(size: 13, c: cMuted)),
                 ]),
               );
             }
@@ -950,8 +977,8 @@ class _RightCard extends StatelessWidget {
 
 // ---------------------------------------------------------------- defense layers
 const layerNames = {
-  'L1': 'Hidden-text scan', 'L2': 'Model Armor', 'L3': 'Gemma quarantine',
-  'L4': 'Vendor callback (A2A)', 'L5': 'Action Firewall', 'L6': 'Human approval',
+  'L1': 'Hidden-text scan', 'L2': 'Model Armor', 'L3': 'Sentinel (Gemma)',
+  'L4': 'Vendor verification', 'L5': 'Policy firewall', 'L6': 'Human approval',
 };
 const layerSwitch = {'L1': 'hidden_text', 'L2': 'model_armor', 'L3': 'quarantine'};
 
@@ -971,7 +998,10 @@ class LayerRail extends StatelessWidget {
             }
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               sectionTitle('Defense layers'),
-              for (final l in layerNames.keys) _layerRow(l, latest[l]),
+              if (act == '0')
+                Text('No controls in legacy automation.', style: sans(size: 13.5, c: cMuted))
+              else
+                for (final l in layerNames.keys) _layerRow(l, latest[l]),
             ]);
           },
         ),
@@ -984,15 +1014,15 @@ class LayerRail extends StatelessWidget {
     final (state, c, tint) = act == '0'
         ? ('NOT INSTALLED', cIdle, cIdleTint)
         : disabled
-            ? ('DISABLED', cHold, cHoldTint)
+            ? ('OFF', cHold, cHoldTint)
             : switch (v) {
                 'BLOCK' || 'DENY' => ('BLOCKED', cBlock, cBlockTint),
-                'PASS' || 'ALLOW' => ('CLEAR', cPass, cPassTint),
-                _ => ('STANDBY', cIdle, cIdleTint),
+                'PASS' || 'ALLOW' => ('PASSED', cPass, cPassTint),
+                _ => ('—', cIdle, cIdleTint),
               };
     final row = Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         color: state == 'BLOCKED' ? cBlockTint : cIdleTint,
         borderRadius: BorderRadius.circular(12),
@@ -1008,8 +1038,7 @@ class LayerRail extends StatelessWidget {
             child: Text(l, style: sans(size: 11, w: FontWeight.w800, c: cInk)),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(layerNames[l]!, style: sans(size: 13, w: FontWeight.w600))),
-          if (locked) const Padding(padding: EdgeInsets.only(right: 6), child: Icon(Icons.lock_rounded, size: 13, color: cMuted)),
+          Expanded(child: Text(layerNames[l]!, style: sans(size: 13, w: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
           chip(state, c, tint),
         ]),
         if (ev != null && act != '0' && !disabled)

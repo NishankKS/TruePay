@@ -12,13 +12,13 @@ class Scenario {
 }
 
 const scenarios = <Scenario>[
-  Scenario('0', 'baseline', 'INV-1003', '0', 'Life without ibanned', 'Fake bank change, paid with a TAN', 'ignored'),
-  Scenario('1', 'clean', 'INV-1001', '1', 'Clean invoice', 'Müller, €4,280, one tap', 'defaults'),
-  Scenario('2', 'poisoned', 'INV-1002', '2', 'Poisoned invoice', 'Hidden text for the AI', 'defaults'),
-  Scenario('3', 'swap', 'INV-1003', '3', 'Same fake, with ibanned', 'Vendor agent says: no change', 'defaults'),
-  Scenario('4', 'insider', null, '4', 'Rogue insider', 'Compromised component', 'ignored'),
-  Scenario('5', 'poisoned', 'INV-1002', '5', 'AI fully fooled', 'Defenses off, jailbroken', 'L1-L3 off, jailbreak on'),
-  Scenario('judge', 'judge', 'INV-1099', 'Run attack', 'Judge mode', 'Your text on a clean invoice', 'as set'),
+  Scenario('0', 'baseline', 'INV-1003', 'legacy', 'Legacy AP automation', 'INV-1003 · €18,950 · no controls', 'ignored'),
+  Scenario('1', 'clean', 'INV-1001', 'clean', 'Standard invoice', 'INV-1001 · €4,280 · Müller Bürobedarf', 'defaults'),
+  Scenario('2', 'poisoned', 'INV-1002', 'inject', 'Prompt injection', 'INV-1002 · hidden text in the PDF', 'defaults'),
+  Scenario('3', 'swap', 'INV-1003', 'swap', 'IBAN substitution', 'INV-1003 · new bank details', 'defaults'),
+  Scenario('4', 'insider', null, 'insider', 'Compromised service', 'Onboarding identity misuse', 'ignored'),
+  Scenario('5', 'poisoned', 'INV-1002', 'jailbreak', 'Jailbroken controller', 'L1–L3 off · firewall only', 'L1-L3 off, jailbreak on'),
+  Scenario('judge', 'judge', 'INV-1099', 'custom', 'Custom invoice', 'INV-1099', 'as set'),
 ];
 
 /// The five scenario buttons in the left rail (Act 5 reuses button 2 with switches).

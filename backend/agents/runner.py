@@ -17,9 +17,9 @@ from backend.common.firestore import db
 from backend.fixtures.make_invoices import OUT, build
 from backend.intake.pipeline import run_intake
 
-TITLES = {"baseline": "Act 0: today, without IBAN-Wächter", "clean": "Act 1: a clean invoice",
-          "poisoned": "Act 2: a poisoned invoice", "swap": "Act 3: the same invoice, now with IBAN-Wächter",
-          "insider": "Act 4: a compromised insider component", "judge": "Judge mode: your attack"}
+TITLES = {"baseline": "Legacy AP automation (no controls)", "clean": "INV-1001: standard invoice",
+          "poisoned": "INV-1002: prompt injection", "swap": "INV-1003: IBAN substitution",
+          "insider": "Compromised service identity", "judge": "Custom invoice"}
 
 
 def vendor_a2a_url() -> str | None:
@@ -58,11 +58,22 @@ def layers_for(scenario: str) -> dict:
 
 
 async def handle(cmd: dict, a2a_url: str | None):
+    """note == "demo": replay cached agent responses for this run (fast, no model calls). paygate, rules,
+    approvals and the vendor master stay real either way."""
+    demo = cmd.get("note") == "demo" and cmd["scenario"] != "judge"
+    prev, config.SIM = config.SIM, config.SIM or demo
+    try:
+        await _handle(cmd, a2a_url)
+    finally:
+        config.SIM = prev
+
+
+async def _handle(cmd: dict, a2a_url: str | None):
     scenario = cmd["scenario"]
     run_id, seq = new_run(scenario)
     callbacks.RUN.update(run_id=run_id, invoice_id=None)
     emit(run_id, "intake" if scenario != "baseline" else "baseline", "STEP", "INFO", TITLES[scenario],
-         f"Run {run_id}" + (" · SIMULATION: scripted agents, no Gemini/Model Armor/Sheets" if config.SIM else ""))
+         f"Run {run_id}" + (" · demo mode: cached agent responses" if config.SIM else " · live agents"))
 
     if scenario == "insider":
         await compromised_onboarding.attack(run_id)
