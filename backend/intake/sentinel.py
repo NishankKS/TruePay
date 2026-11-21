@@ -25,7 +25,7 @@ def _call_api(text: str, model: str | None = None) -> str:
     """Fallback (PRD §14): Gemma via the Gemini API, same schema. SENTINEL_MODEL = the AI Studio model id."""
     from google import genai
     from google.genai import types
-    client = genai.Client(http_options=types.HttpOptions(timeout=10000)  # API minimum deadline is 10 s)
+    client = genai.Client(http_options=types.HttpOptions(timeout=10000))  # API minimum deadline is 10 s
     model = model or config.SENTINEL_MODEL
     prompt = f"{INSTRUCTION}\n\nJSON schema:\n{json.dumps(SCHEMA)}\n\n<document>\n{text}\n</document>"
     try:
