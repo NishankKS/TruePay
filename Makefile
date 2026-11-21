@@ -58,7 +58,7 @@ reset:
 
 web: app/firebase.web.json
 	cd app && ([ -d web ] || flutter create --platforms=web,android --project-name iban_waechter .) && \
-	  flutter pub get && flutter build web --dart-define-from-file=firebase.web.json
+	  flutter pub get && flutter build web --dart-define-from-file=firebase.web.json --dart-define-from-file=demo_accounts.json
 	firebase deploy --only hosting,firestore
 
 # Firebase web config (public values) for the Flutter app.

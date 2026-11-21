@@ -21,6 +21,12 @@ const _opts = FirebaseOptions(
   storageBucket: String.fromEnvironment('storageBucket'),
 );
 
+// Demo accounts: no login page. The route picks the identity (Firestore rules still check it):
+//   /approve -> approver, everything else -> operator. Passwords come from the git-ignored
+//   demo_accounts.json via --dart-define-from-file (emulator: demo1234).
+const _operatorPw = String.fromEnvironment('OPERATOR_PASSWORD', defaultValue: 'demo1234');
+const _approverPw = String.fromEnvironment('APPROVER_PASSWORD', defaultValue: 'demo1234');
+
 Future<void> main() async {
   usePathUrlStrategy(); // /approve and /report as real paths (Hosting rewrites to index.html)
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,16 +34,24 @@ Future<void> main() async {
   if (_emulator) {
     FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8085);
     await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    const autoLogin = String.fromEnvironment('AUTO_LOGIN'); // emulator only: headless screenshots
-    if (autoLogin.isNotEmpty) {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: autoLogin, password: 'demo1234');
-    }
   }
-  runApp(const App());
+  // Per-tab session, so the operator tab and an /approve tab on the same laptop keep their own identity.
+  await FirebaseAuth.instance.setPersistence(Persistence.SESSION);
+  final approver = Uri.base.path.startsWith('/approve');
+  String? error;
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: approver ? 'approver@iw-demo.example' : 'operator@iw-demo.example',
+        password: approver ? _approverPw : _operatorPw);
+  } on FirebaseAuthException catch (e) {
+    error = e.code;
+  }
+  runApp(App(error: error));
 }
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final String? error;
+  const App({super.key, this.error});
   @override
   Widget build(BuildContext context) => MaterialApp(
         title: 'IBAN-Wächter',
@@ -45,66 +59,13 @@ class App extends StatelessWidget {
         theme: appTheme(),
         onGenerateRoute: (s) => MaterialPageRoute(
           settings: s,
-          builder: (_) => AuthGate(
-            defaultEmail: s.name == '/approve' ? 'approver@iw-demo.example' : 'operator@iw-demo.example',
-            child: switch (s.name) {
-              '/approve' => const ApproverScreen(),
-              '/report' => const ReportScreen(),
-              _ => const MissionControl(),
-            },
-          ),
-        ),
-      );
-}
-
-class AuthGate extends StatelessWidget {
-  final Widget child;
-  final String defaultEmail;
-  const AuthGate({super.key, required this.child, required this.defaultEmail});
-  @override
-  Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snap) => snap.data == null ? LoginForm(email: defaultEmail) : child,
-      );
-}
-
-class LoginForm extends StatefulWidget {
-  final String email;
-  const LoginForm({super.key, required this.email});
-  @override
-  State<LoginForm> createState() => _LoginFormState();
-}
-
-class _LoginFormState extends State<LoginForm> {
-  late final email = TextEditingController(text: widget.email);
-  final pw = TextEditingController();
-  String? err;
-  Future<void> go() async {
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email.text.trim(), password: pw.text);
-    } on FirebaseAuthException catch (e) {
-      setState(() => err = e.code);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Container(
-            width: 360,
-            padding: const EdgeInsets.all(24),
-            decoration: card(),
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('IBAN-Wächter', style: sans(size: 20, w: FontWeight.w600)),
-              const SizedBox(height: 16),
-              TextField(controller: email, decoration: const InputDecoration(labelText: 'Email')),
-              TextField(controller: pw, obscureText: true, decoration: const InputDecoration(labelText: 'Password'),
-                  onSubmitted: (_) => go()),
-              if (err != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(err!, style: sans(c: cBlock))),
-              const SizedBox(height: 16),
-              FilledButton(onPressed: go, child: const Text('Sign in')),
-            ]),
-          ),
+          builder: (_) => error != null
+              ? Scaffold(body: Center(child: Text('Demo sign-in failed: $error', style: sans(c: cBlock))))
+              : switch (s.name) {
+                  '/approve' => const ApproverScreen(),
+                  '/report' => const ReportScreen(),
+                  _ => const MissionControl(),
+                },
         ),
       );
 }

@@ -177,7 +177,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
                   child: FilledButton(
                       style: FilledButton.styleFrom(backgroundColor: cPass, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                       onPressed: () => decide('APPROVED'),
-                      child: Text('Approve ${euro(a['amount_cents'])}', style: sans(c: Colors.white, w: FontWeight.w600)))),
+                      child: Text('Approve ${euro(a['amount_cents'])}', style: sans(c: cPage, w: FontWeight.w700)))),
             ),
           ]),
       ]),
