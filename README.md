@@ -91,6 +91,11 @@ make web                                  # Flutter web build + Firebase deploy
 make up                                   # tmux: ollama, paygate, vendor agent, runner
 ```
 
+**Try it without any cloud keys:** `make sim` runs the Firestore/Auth emulators with the real security rules,
+the real `paygate` firewall and the UI on <http://localhost:5000>. Gemini, Model Armor and Sheets are replaced by clearly
+labelled scripted stand-ins ([`backend/sim.py`](backend/sim.py)). Log in with `operator@iw-demo.example` / `demo1234`;
+for the phone, open `/approve` as `approver@iw-demo.example`.
+
 ## Demo steps
 
 Stage order 0, 3, 1, 2, 4, 5. Run `make reset` first; switches at their defaults.
