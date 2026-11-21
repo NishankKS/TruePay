@@ -240,11 +240,9 @@ class _SidebarState extends State<Sidebar> {
         child: ListView(padding: const EdgeInsets.fromLTRB(18, 22, 18, 22), children: [
           Row(children: [
             Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(gradient: accentGradient, borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [BoxShadow(color: Color(0x4D5B4EE6), blurRadius: 12, offset: Offset(0, 4))]),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14),
+                  boxShadow: const [BoxShadow(color: Color(0x595B4EE6), blurRadius: 16, offset: Offset(0, 6))]),
+              child: Image.asset('assets/brand/logo.png', width: 48, height: 48),
             ),
             const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

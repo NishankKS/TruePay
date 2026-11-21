@@ -1,6 +1,6 @@
 {
-    "name": "iban_waechter",
-    "short_name": "iban_waechter",
+    "name": "ibanned",
+    "short_name": "ibanned",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

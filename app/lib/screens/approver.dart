@@ -15,7 +15,11 @@ class ApproverScreen extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: cSurface,
-        title: Text('Approvals', style: sans(size: 18, w: FontWeight.w600)),
+        title: Row(children: [
+          Image.asset('assets/brand/logo.png', width: 30, height: 30),
+          const SizedBox(width: 10),
+          Text('Approvals', style: sans(size: 18, w: FontWeight.w600)),
+        ]),
         actions: [Padding(padding: const EdgeInsets.only(right: 12), child: Center(child: Text(user?.email ?? '', style: sans(size: 12.5, c: cMuted))))],
       ),
       body: Center(
