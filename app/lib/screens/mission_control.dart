@@ -155,7 +155,7 @@ class _MissionControlState extends State<MissionControl> {
 Widget sectionTitle(String t, {Widget? trailing}) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(children: [
-        Text(t, style: sans(size: 15, w: FontWeight.w700)),
+        Text(t, style: sans(size: 17, w: FontWeight.w600)),
         const Spacer(),
         if (trailing != null) trailing,
       ]),
@@ -163,7 +163,7 @@ Widget sectionTitle(String t, {Widget? trailing}) => Padding(
 
 Widget overline(String t) => Padding(
       padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
-      child: Text(t.toUpperCase(), style: sans(size: 11, w: FontWeight.w700, c: cIdle).copyWith(letterSpacing: 1.1)),
+      child: Text(t.toUpperCase(), style: sans(size: 11, w: FontWeight.w600, c: cIdle).copyWith(letterSpacing: 0.88)),
     );
 
 Widget panel({required Widget child, EdgeInsets padding = const EdgeInsets.all(18)}) =>
@@ -215,7 +215,7 @@ class _SidebarState extends State<Sidebar> {
                 height: 32,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  gradient: baseline ? null : heroGradient,
+                  gradient: baseline ? null : accentGradient,
                   color: baseline ? cIdleTint : null,
                   borderRadius: BorderRadius.circular(9),
                   border: baseline ? Border.all(color: cLine) : null,
@@ -276,12 +276,12 @@ class _SidebarState extends State<Sidebar> {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(gradient: heroGradient, borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
+              decoration: BoxDecoration(gradient: accentGradient, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 21),
             ),
             const SizedBox(width: 11),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('IBAN-Wächter', style: sans(size: 16, w: FontWeight.w800)),
+              Text('IBAN-Wächter', style: sans(size: 17, w: FontWeight.w600)),
               Text('Zero-trust accounts payable', style: sans(size: 12, c: cMuted)),
             ]),
           ]),
@@ -306,7 +306,7 @@ class _SidebarState extends State<Sidebar> {
           SizedBox(
             height: 42,
             child: FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: cNavy, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              style: FilledButton.styleFrom(backgroundColor: cNavy, shape: const StadiumBorder()),
               onPressed: widget.busy ? null : () => run('judge', text: note.text),
               icon: const Icon(Icons.bolt_rounded, size: 18),
               label: Text('Run attack', style: sans(c: Colors.white, w: FontWeight.w600)),
@@ -337,7 +337,7 @@ class _SidebarState extends State<Sidebar> {
               ]),
               const SizedBox(height: 10),
               OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                style: OutlinedButton.styleFrom(shape: const StadiumBorder(), foregroundColor: cInk, side: const BorderSide(color: cLine2)),
                 onPressed: () => Navigator.pushNamed(context, '/report'),
                 icon: const Icon(Icons.receipt_long_rounded, size: 16),
                 label: const Text('Open audit report'),
@@ -359,7 +359,7 @@ class TopBar extends StatelessWidget {
     return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(b.$1, style: sans(size: 24, w: FontWeight.w800)),
+          Text(b.$1, style: sans(size: 22, w: FontWeight.w600)),
           const SizedBox(height: 2),
           Text(b.$2, style: sans(size: 14, c: cMuted)),
         ]),
@@ -429,8 +429,8 @@ class KpiRow extends StatelessWidget {
               child: Container(
                 height: 112,
                 padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(gradient: heroGradient, borderRadius: BorderRadius.circular(18),
-                    boxShadow: const [BoxShadow(color: Color(0x404F46E5), blurRadius: 24, offset: Offset(0, 10))]),
+                decoration: BoxDecoration(gradient: heroGradient, borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [BoxShadow(color: Color(0x333A2784), blurRadius: 24, offset: Offset(0, 10))]),
                 child: Row(children: [
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -520,7 +520,7 @@ class Pipeline extends StatelessWidget {
                         left: step / 2,
                         top: 58,
                         width: step * idx,
-                        child: Container(height: 2, decoration: const BoxDecoration(gradient: heroGradient)),
+                        child: Container(height: 2, decoration: const BoxDecoration(gradient: accentGradient)),
                       ),
                     for (var i = 0; i < nodes.length; i++)
                       Positioned(
@@ -580,10 +580,10 @@ class _AgentTokenState extends State<_AgentToken> with SingleTickerProviderState
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              gradient: heroGradient,
+              gradient: accentGradient,
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              boxShadow: const [BoxShadow(color: Color(0x554F46E5), blurRadius: 12, offset: Offset(0, 4))],
+              boxShadow: const [BoxShadow(color: Color(0x555B4EE6), blurRadius: 12, offset: Offset(0, 4))],
             ),
             child: const Icon(Icons.smart_toy_rounded, size: 16, color: Colors.white),
           ),
@@ -677,7 +677,7 @@ class AgentProgress extends StatelessWidget {
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(end: progress),
                   duration: const Duration(milliseconds: 500),
-                  builder: (_, v, __) => LinearProgressIndicator(value: v, minHeight: 6, backgroundColor: cLine, color: cActive),
+                  builder: (_, v, __) => LinearProgressIndicator(value: v, minHeight: 6, backgroundColor: const Color(0xFFEFEFF4), color: cActive),
                 ),
               ),
               const SizedBox(height: 12),
@@ -765,7 +765,7 @@ class AgentLogs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(color: cConsole, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: cConsole, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Color(0x14141428), blurRadius: 16, offset: Offset(0, 4))]),
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [

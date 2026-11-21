@@ -22,3 +22,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/invoices/
+  fonts:
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist.ttf
+    - family: GeistMono
+      fonts:
+        - asset: assets/fonts/GeistMono.ttf
