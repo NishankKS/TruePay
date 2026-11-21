@@ -19,7 +19,7 @@ def wipe(col, where=None):
     return n
 
 
-if __name__ == "__main__":
+def reset() -> dict:
     counts = {c: wipe(c) for c in ("events", "invoices", "approvals", "commands", "baseline_confirmations",
                                    "baseline_transfers")}
     counts["payments"] = wipe("payments", ("historic", "==", False))
@@ -30,4 +30,8 @@ if __name__ == "__main__":
                                       "session_started_at": datetime.now(timezone.utc), "revoked": []})
     if not config.LOCAL_MASTER:
         seed_sheet(ledger=True)  # restores PO amounts and empties the ledger
-    print("reset:", counts)
+    return counts
+
+
+if __name__ == "__main__":
+    print("reset:", reset())

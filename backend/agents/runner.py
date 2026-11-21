@@ -136,6 +136,10 @@ def main():
         new = sorted(col.where("status", "==", "NEW").stream(), key=lambda s: str(s.to_dict().get("created_at")))
         for snap in new[:1]:
             cmd = snap.to_dict()
+            if cmd.get("note") == "reset":  # sidebar Reset button (rules only allow commands, not deletes)
+                from backend.scripts.reset import reset
+                print("runner: reset requested from the UI:", reset())
+                continue
             if not set_status(snap.reference, "RUNNING"):
                 continue
             try:

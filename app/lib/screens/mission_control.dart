@@ -199,6 +199,14 @@ class _SidebarState extends State<Sidebar> {
     });
   }
 
+  /// Clears runs, counters and switches (the runner performs it; the UI may only create commands).
+  Future<void> _reset() => db.collection('commands').add({
+        'scenario': 'judge', // any allowed key; the runner sees note == "reset" and never runs it
+        'status': 'NEW',
+        'note': 'reset',
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
   Widget _scenario(Scenario s) {
     final dim = s.act == '0' || s.act == '5';
     final active = widget.busy && widget.currentAct == s.act;
@@ -275,6 +283,18 @@ class _SidebarState extends State<Sidebar> {
           overline('Scenarios'),
           for (final s in scenarioButtons) _scenario(s),
           const SizedBox(height: 14),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                    shape: const StadiumBorder(), foregroundColor: cInk, side: const BorderSide(color: cLine2), padding: const EdgeInsets.symmetric(vertical: 14)),
+                onPressed: widget.busy ? null : _reset,
+                icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                label: Text('Reset', style: sans(w: FontWeight.w500)),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 10),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(), foregroundColor: cInk, side: const BorderSide(color: cLine2), padding: const EdgeInsets.symmetric(vertical: 14)),
