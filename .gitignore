@@ -14,3 +14,4 @@ functions/lib/
 backend/fixtures/out/
 app/firebase.web.json
 *-debug.log
+UI.pdf
