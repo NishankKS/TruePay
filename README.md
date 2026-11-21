@@ -1,6 +1,6 @@
-# IBAN-Wächter: the zero-trust AI accounts-payable crew
+# iBanned: the zero-trust AI accounts-payable crew
 
-> **photoTAN proves who pays. IBAN-Wächter proves who gets paid.**
+> **photoTAN proves who pays. iBanned proves who gets paid.**
 
 AI agents read invoices, verify vendors and prepare payments behind a policy-as-code firewall, so even a fully
 fooled AI cannot move the money. Built at DevFest Münster 2026.
@@ -16,7 +16,7 @@ AI agents that read invoices add a new hole: one hidden sentence in a PDF become
 
 ## Before / after: the same invoice twice
 
-| | Today's invoice automation (Act 0) | With IBAN-Wächter (Act 3) |
+| | Today's invoice automation (Act 0) | With iBanned (Act 3) |
 | :-- | :-- | :-- |
 | Invoice | INV-1003, €18,950, IBAN swapped to `DE39…5678` | the same file |
 | What runs | Two regexes take the IBAN printed on the invoice | Intake L1–L3, then checks C1–C6 flag IBAN ≠ master |
@@ -65,7 +65,7 @@ F7 `APPROVAL_REQUIRED`. Rules F3–F6 are CEL expressions in [`policy/paygate.ya
 
 ## Agent UX checklist
 
-| # | Checklist point | How IBAN-Wächter meets it |
+| # | Checklist point | How iBanned meets it |
 | :-- | :-- | :-- |
 | 1 | Shape tools around tasks, not endpoints | Six business tasks: get, verify, history, hold, alert, request payment |
 | 2 | Accept names, return only needed fields, say what was cut | Invoice numbers and vendor names are accepted. Results hold fields only. History reports `shown` and `total`. |

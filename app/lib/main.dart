@@ -54,7 +54,7 @@ class App extends StatelessWidget {
   const App({super.key, this.error});
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'ibanned',
+        title: 'iBanned',
         debugShowCheckedModeBanner: false,
         theme: appTheme(),
         onGenerateRoute: (s) => MaterialPageRoute(

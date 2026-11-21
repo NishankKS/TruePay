@@ -114,6 +114,16 @@ async def _handle(cmd: dict, a2a_url: str | None):
          amount_cents=inv.get("amount_cents"))
 
 
+def set_status(ref, status: str) -> bool:
+    """A reset may delete the command mid-run; the runner must keep listening."""
+    try:
+        ref.update({"status": status})
+        return True
+    except Exception as e:
+        print(f"runner: command {ref.id} gone ({e.__class__.__name__}); continuing")
+        return False
+
+
 def main():
     if config.SIM:
         print("runner: SIMULATION MODE (IW_SIM=1): scripted agents, no Gemini / Model Armor / Sheets")
@@ -126,15 +136,16 @@ def main():
         new = sorted(col.where("status", "==", "NEW").stream(), key=lambda s: str(s.to_dict().get("created_at")))
         for snap in new[:1]:
             cmd = snap.to_dict()
-            snap.reference.update({"status": "RUNNING"})
+            if not set_status(snap.reference, "RUNNING"):
+                continue
             try:
                 if cmd.get("scenario") not in config.SCENARIO_KEYS:
                     raise ValueError(f"unknown scenario {cmd.get('scenario')!r}")
                 asyncio.run(handle(cmd, a2a_url))
-                snap.reference.update({"status": "DONE"})
+                set_status(snap.reference, "DONE")
             except Exception as e:
                 traceback.print_exc()
-                snap.reference.update({"status": "ERROR"})
+                set_status(snap.reference, "ERROR")
                 run_id = (db().document("config/runtime").get().to_dict() or {}).get("current_run_id", "run-0000")
                 emit(run_id, "controller", "STEP", "INFO", f"Run failed: {e.__class__.__name__}",
                      str(e)[:200] or "see the runner terminal", invoice_id=callbacks.RUN.get("invoice_id"))

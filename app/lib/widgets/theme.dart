@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // Design tokens: PreventNet design system (local/ui.css), light mode. Semantic colours keep one meaning each.
 const cPage = Color(0xFFF2F2F6), cSurface = Color(0xFFFFFFFF), cRaised = Color(0xFFF7F7FB);
 const cInk = Color(0xFF111118), cMuted = Color(0xFF45454F), cLine = Color(0xFFEBEBF1), cLine2 = Color(0xFFDFDFE8);
-const cActive = Color(0xFF5B4EE6), cActiveTint = Color(0xFFEFEDFE), cViolet = Color(0xFF7D72F6), cCyan = Color(0xFF139A8F);
+const cActive = Color(0xFF133D50), cActiveTint = Color(0xFFE3EEF2), cViolet = Color(0xFF2A6A85), cCyan = Color(0xFF3E8FAD);
 const cNavy = Color(0xFF15151C), cConsole = Color(0xFF15151C);
 const cPass = Color(0xFF178F60), cPassTint = Color(0xFFE4F5ED);
 const cBlock = Color(0xFFD64541), cBlockTint = Color(0xFFFCEBEA);
@@ -13,10 +13,10 @@ const cIdle = Color(0xFF6E6E7C), cIdleTint = Color(0xFFF4F4F8);
 
 /// PreventNet hero: deep violet (--hero-a -> --hero-b, 120deg).
 const heroGradient = LinearGradient(
-    colors: [Color(0xFF1D1446), Color(0xFF3A2784)], begin: Alignment.topLeft, end: Alignment.bottomRight);
+    colors: [Color(0xFF0B2633), Color(0xFF1A5068)], begin: Alignment.topLeft, end: Alignment.bottomRight);
 /// PreventNet brand tile / accent buttons (--accent-2 -> --accent).
 const accentGradient = LinearGradient(
-    colors: [Color(0xFF7D72F6), Color(0xFF5B4EE6)], begin: Alignment.topLeft, end: Alignment.bottomRight);
+    colors: [Color(0xFF2A6A85), Color(0xFF133D50)], begin: Alignment.topLeft, end: Alignment.bottomRight);
 
 // Geist / Geist Mono (bundled, OFL). PreventNet uses weights 400-600 only: anything heavier is capped at 600.
 FontWeight _cap(FontWeight w) => w.value > 600 ? FontWeight.w600 : w;
@@ -99,13 +99,13 @@ class Stamp extends StatelessWidget {
   final String text;
   const Stamp(this.text, {super.key});
   @override
-  Widget build(BuildContext context) => Transform.rotate(
+  Widget build(BuildContext context) => FittedBox(fit: BoxFit.scaleDown, child: Padding(padding: const EdgeInsets.all(18), child: Transform.rotate(
         angle: -8 * 3.14159 / 180,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
           decoration: BoxDecoration(border: Border.all(color: cBlock, width: 4), borderRadius: BorderRadius.circular(8)),
           child: Text(text,
-              style: sans(size: 44, w: FontWeight.w600, c: cBlock).copyWith(letterSpacing: 4, height: 1.1)),
+              style: sans(size: 44, w: FontWeight.w600, c: cBlock).copyWith(letterSpacing: 4, height: 1.1), softWrap: false, maxLines: 1),
         ),
-      );
+      )));
 }

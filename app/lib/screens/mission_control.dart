@@ -252,12 +252,12 @@ class _SidebarState extends State<Sidebar> {
           Row(children: [
             Container(
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(14),
-                  boxShadow: const [BoxShadow(color: Color(0x595B4EE6), blurRadius: 16, offset: Offset(0, 6))]),
+                  boxShadow: const [BoxShadow(color: Color(0x59133D50), blurRadius: 16, offset: Offset(0, 6))]),
               child: Image.asset('assets/brand/logo.png', width: 48, height: 48),
             ),
             const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('ibanned', style: sans(size: 19, w: FontWeight.w600)),
+              Text('iBanned', style: sans(size: 19, w: FontWeight.w600)),
               Text('No fake IBAN gets paid', style: sans(size: 12.5, c: cMuted)),
             ]),
           ]),
@@ -362,11 +362,11 @@ class KpiRow extends StatelessWidget {
                 height: 112,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(gradient: heroGradient, borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [BoxShadow(color: Color(0x333A2784), blurRadius: 24, offset: Offset(0, 10))]),
+                    boxShadow: const [BoxShadow(color: Color(0x33133D50), blurRadius: 24, offset: Offset(0, 10))]),
                 child: Row(children: [
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text('Blocked by ibanned', style: sans(size: 13, c: Colors.white70, w: FontWeight.w500)),
+                      Text('Blocked by iBanned', style: sans(size: 13, c: Colors.white70, w: FontWeight.w500)),
                       _counter(d['blocked_cents'], kpi(Colors.white).copyWith(fontSize: 32)),
                     ]),
                   ),
@@ -379,7 +379,7 @@ class KpiRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 14),
-            _tile(Icons.trending_down_rounded, 'Lost without ibanned', d['lost_cents'], cBlock, cBlockTint),
+            _tile(Icons.trending_down_rounded, 'Lost without iBanned', d['lost_cents'], cBlock, cBlockTint),
             const SizedBox(width: 14),
             _tile(Icons.payments_rounded, 'Paid', d['paid_cents'], cInk, cPassTint),
             const SizedBox(width: 14),
@@ -517,7 +517,7 @@ class _AgentTokenState extends State<_AgentToken> with SingleTickerProviderState
               gradient: accentGradient,
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              boxShadow: const [BoxShadow(color: Color(0x555B4EE6), blurRadius: 12, offset: Offset(0, 4))],
+              boxShadow: const [BoxShadow(color: Color(0x55133D50), blurRadius: 12, offset: Offset(0, 4))],
             ),
             child: const Icon(Icons.smart_toy_rounded, size: 16, color: Colors.white),
           ),
@@ -693,7 +693,7 @@ class AgentLogs extends StatelessWidget {
   const AgentLogs({super.key, required this.runId, required this.running});
 
   static const _actorColors = {
-    'controller': Color(0xFF818CF8), 'investigator': Color(0xFFC084FC), 'vendor_agent': Color(0xFF38BDF8),
+    'controller': Color(0xFF7DD3FC), 'investigator': Color(0xFF5EEAD4), 'vendor_agent': Color(0xFF38BDF8),
     'firewall': Color(0xFF34D399), 'human': Color(0xFFFBBF24), 'bank': Color(0xFFFBBF24), 'onboarding': Color(0xFFFB7185),
   };
 
@@ -710,7 +710,7 @@ class AgentLogs extends StatelessWidget {
             const SizedBox(width: 8),
             Text(runId, style: mono(size: 12, c: Colors.white54)),
             const Spacer(),
-            if (running) spinner(size: 12, c: const Color(0xFF818CF8)),
+            if (running) spinner(size: 12, c: const Color(0xFF7DD3FC)),
             const SizedBox(width: 6),
             Text(running ? 'streaming' : 'live', style: mono(size: 11.5, c: Colors.white54)),
           ]),
@@ -732,7 +732,7 @@ class AgentLogs extends StatelessWidget {
                     final vc = switch (v) {
                       'PASS' || 'ALLOW' => const Color(0xFF34D399),
                       'BLOCK' || 'DENY' => const Color(0xFFFB7185),
-                      _ => const Color(0xFF818CF8),
+                      _ => const Color(0xFF7DD3FC),
                     };
                     final codes = (e['codes'] as List?)?.join(' ') ?? '';
                     return Padding(
