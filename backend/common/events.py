@@ -33,7 +33,7 @@ class Event(BaseModel):
 # Compact (DE39999999990012345678) or grouped (DE39 9999 9999 0012 3456 78) IBANs.
 _IBAN_IN_TEXT = re.compile(r"\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,4})?\b")
 _COLOURS = {"ALLOW": "green", "PASS": "green", "DENY": "red", "BLOCK": "red", "INFO": "blue"}
-_console = Console(file=sys.stdout, highlight=False)
+_console = Console(file=sys.stdout, highlight=False, soft_wrap=True)
 
 # EMIT_FIRESTORE=0 -> terminal only (tests, offline dev).
 _WRITE = os.environ.get("EMIT_FIRESTORE", "1") != "0"

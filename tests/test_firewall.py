@@ -285,6 +285,13 @@ def test_f7_fail(gate, case):
     assert gate.store.invoices["INV-1001-01"]["status"] != "PAID"
 
 
+def test_f7_hold_after_request_stops_payment(gate):
+    aid = approved(gate)
+    gate.call("tc", "place_hold", {"invoice": "INV-1001", "reason": "late doubt"})
+    assert_denied(approvals.execute(gate, aid, approvals.sign(gate, aid)), "APPROVAL_REQUIRED")
+    assert gate.store.invoices["INV-1001-01"]["status"] == "HOLD"
+
+
 def test_sign_refuses_unapproved(gate):
     aid = gate.call("tc", "request_payment", GOOD_PAY)["approval_id"]
     assert approvals.sign(gate, aid) is None

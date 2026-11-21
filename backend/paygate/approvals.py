@@ -38,6 +38,7 @@ def execute(gate, approval_id: str, token: str) -> dict:
     inv = store.invoice(a["invoice_id"]) if a else None
     f7_ok = bool(
         a and inv and gate.approval_secret and a["status"] == "APPROVED"
+        and inv["status"] == "PENDING_APPROVAL"  # a HOLD placed after the request stops the payment
         and gate.approver_uid and a.get("decided_by") == gate.approver_uid
         and _unix(a["expires_at"]) > time.time()
         and hmac.compare_digest(token or "", token_for(gate, approval_id))
