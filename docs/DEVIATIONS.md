@@ -3,3 +3,6 @@
 - PRD file lived at repo root as `IBAN-Wächter — PRD (DevFest Münster 2026) (2).md`; moved to `docs/PRD.md`.
 - FastMCP 4.2.4: server runs with `mcp.run(transport="http", host, port=8001, path="/mcp")` (streamable HTTP).
 - `get_invoice` returns the full invoice IBAN (Controller prompt §5 must pass it to `request_payment`); history, approvals, events and logs stay masked (§7 point 2 applies to those).
+- Investigator gets `get_invoice` in its client-side tool filter (allowed by policy) so it can read the vendor name and IBAN last 4 it must quote; §5 table lists only history/hold/alert.
+- Payment execution additionally requires the invoice to still be PENDING_APPROVAL, so a HOLD placed after the request stops the payment (fails closed; F7 code unchanged).
+- With L3 off (breach simulation) fields come from a deterministic parser (`intake/pipeline.parse_plain`), no model; the Controller additionally gets the raw text as §5 specifies.

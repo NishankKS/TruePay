@@ -1,6 +1,14 @@
 PY ?= .venv/bin/python
+# Tools installed in user space by the setup (docs/SETUP.md step 1)
+export PATH := $(HOME)/tools/flutter/bin:$(HOME)/tools/google-cloud-sdk/bin:$(HOME)/tools/tmuxenv/bin:$(PATH)
 
-.PHONY: fixtures seed up test reset web
+.PHONY: fixtures seed up test reset web check-env install
+
+install:
+	python3 -m venv .venv && $(PY) -m pip install -q -r requirements.txt
+
+check-env:
+	@$(PY) scripts/check_env.py
 
 fixtures:
 	$(PY) -m backend.fixtures.make_invoices

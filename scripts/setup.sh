@@ -34,7 +34,7 @@ done
 for k in TOKEN_CONTROLLER TOKEN_INVESTIGATOR TOKEN_ONBOARDING APPROVAL_SECRET; do
   grep -q "^$k=.\+" .env || sed -i "s|^$k=.*|$k=$(python3 -c 'import secrets; print(secrets.token_hex(16))')|" .env
 done
-sed -i "s|^GCP_PROJECT=.*|GCP_PROJECT=$GCP_PROJECT|; s|<GCP_PROJECT>|$GCP_PROJECT|" .env
+sed -i "s|^GCP_PROJECT=.*|GCP_PROJECT=$GCP_PROJECT|; /^MODEL_ARMOR_TEMPLATE=/s|<GCP_PROJECT>|$GCP_PROJECT|" .env
 
 # 6. Local model
 ollama pull gemma4:e4b
