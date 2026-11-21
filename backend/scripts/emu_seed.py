@@ -15,6 +15,9 @@ for email in ("operator@iw-demo.example", "approver@iw-demo.example"):
         headers={"Content-Type": "application/json"})
     try:
         uid = json.load(urllib.request.urlopen(req))["localId"]
-    except urllib.error.HTTPError:  # already exists
-        uid = "(exists)"
+    except urllib.error.HTTPError:  # already exists: sign in to read its uid
+        req.full_url = req.full_url.replace("accounts:signUp", "accounts:signInWithPassword")
+        uid = json.load(urllib.request.urlopen(req))["localId"]
     print(f"{email} / demo1234  uid={uid}")
+    if email.startswith("approver"):
+        print(f"APPROVER_UID={uid}")

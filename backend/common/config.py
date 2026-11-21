@@ -24,6 +24,7 @@ PAYGATE_URL = env("PAYGATE_URL", "http://localhost:8001/mcp")
 POLICY_FILE = ROOT / env("POLICY_FILE", "./policy/paygate.yaml")
 APPROVAL_SECRET = env("APPROVAL_SECRET")
 APPROVER_UID = env("APPROVER_UID")
+SIM = env("IW_SIM") == "1"  # keyless rehearsal mode, see backend/sim.py
 
 # token -> identity (PRD §6 Identities). Empty tokens never match.
 TOKENS = {

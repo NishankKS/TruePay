@@ -22,18 +22,8 @@ class ApproverScreen extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 390),
           child: ListView(padding: const EdgeInsets.all(12), children: [
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: db.collection('approvals').where('status', isEqualTo: 'PENDING').limit(1).snapshots(),
-              builder: (_, s) => (s.data?.docs.isNotEmpty ?? false)
-                  ? ApprovalCard(doc: s.data!.docs.first)
-                  : const SizedBox.shrink(),
-            ),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: db.collection('baseline_confirmations').where('status', isEqualTo: 'PENDING').limit(1).snapshots(),
-              builder: (_, s) => (s.data?.docs.isNotEmpty ?? false)
-                  ? BankCard(doc: s.data!.docs.first)
-                  : const SizedBox.shrink(),
-            ),
+            LiveDoc('approvals', (d) => ApprovalCard(doc: d)),
+            LiveDoc('baseline_confirmations', (d) => BankCard(doc: d)),
             const SizedBox(height: 8),
             const AlertsFeed(),
           ]),
@@ -41,6 +31,52 @@ class ApproverScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The newest approval / bank confirmation, shown while PENDING and for 60 s after a decision, so the phone
+/// (and the Mission Control mirror) can show "Approved, executing…" -> "Paid" or "Transfer sent".
+bool isLive(Map<String, dynamic> d) {
+  final st = d['status'];
+  if (st == 'PENDING') return true;
+  if (!['APPROVED', 'EXECUTED', 'CONFIRMED'].contains(st)) return false;
+  final at = d['decided_at'];
+  return at is! Timestamp || DateTime.now().difference(at.toDate()).inSeconds < 60; // null = write pending
+}
+
+Stream<QuerySnapshot<Map<String, dynamic>>> newest(String col) =>
+    db.collection(col).orderBy('created_at', descending: true).limit(1).snapshots();
+
+class LiveDoc extends StatefulWidget {
+  final String collection;
+  final Widget Function(QueryDocumentSnapshot<Map<String, dynamic>>) builder;
+  final Widget fallback;
+  const LiveDoc(this.collection, this.builder, {super.key, this.fallback = const SizedBox.shrink()});
+  @override
+  State<LiveDoc> createState() => _LiveDocState();
+}
+
+class _LiveDocState extends State<LiveDoc> {
+  Timer? _t;
+  @override
+  void initState() {
+    super.initState();
+    _t = Timer.periodic(const Duration(seconds: 2), (_) => setState(() {})); // re-check the 60 s window
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: newest(widget.collection),
+        builder: (_, s) {
+          final docs = s.data?.docs ?? const [];
+          return docs.isNotEmpty && isLive(docs.first.data()) ? widget.builder(docs.first) : widget.fallback;
+        },
+      );
 }
 
 // ---------------------------------------------------------------- IBAN-Wächter approval card
@@ -54,7 +90,6 @@ class ApprovalCard extends StatefulWidget {
 
 class _ApprovalCardState extends State<ApprovalCard> {
   Timer? _t;
-  String? _phase; // null | executing | paid
   @override
   void initState() {
     super.initState();
@@ -70,7 +105,6 @@ class _ApprovalCardState extends State<ApprovalCard> {
   Future<void> decide(String status) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     await widget.doc.reference.update({'status': status, 'decided_by': uid, 'decided_at': FieldValue.serverTimestamp()});
-    if (status == 'APPROVED') setState(() => _phase = 'executing');
   }
 
   @override
@@ -87,7 +121,8 @@ class _ApprovalCardState extends State<ApprovalCard> {
         Row(children: [
           Text('Payment approval', style: sans(size: 15, w: FontWeight.w600)),
           const Spacer(),
-          Text('${left ~/ 60}:${(left % 60).toString().padLeft(2, '0')}', style: mono(c: cHold)),
+          if (a['status'] == 'PENDING')
+            Text('${left ~/ 60}:${(left % 60).toString().padLeft(2, '0')}', style: mono(c: cHold)),
         ]),
         const SizedBox(height: 8),
         Text('${a['vendor_name']}', style: sans(w: FontWeight.w600)),
@@ -112,8 +147,18 @@ class _ApprovalCardState extends State<ApprovalCard> {
             ),
         ]),
         const SizedBox(height: 14),
-        if (_phase == 'executing')
-          Text('Approved, executing…', style: sans(w: FontWeight.w600, c: cPass))
+        if (a['status'] == 'APPROVED')
+          Row(children: [
+            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: cPass)),
+            const SizedBox(width: 8),
+            Text('Approved, executing…', style: sans(w: FontWeight.w600, c: cPass)),
+          ])
+        else if (a['status'] == 'EXECUTED')
+          Row(children: [
+            const Icon(Icons.check_circle, color: cPass),
+            const SizedBox(width: 8),
+            Text('Paid', style: sans(size: 18, w: FontWeight.w700, c: cPass)),
+          ])
         else if (!widget.readOnly)
           Row(children: [
             Expanded(
@@ -150,7 +195,6 @@ class BankCard extends StatefulWidget {
 }
 
 class _BankCardState extends State<BankCard> {
-  bool sent = false;
   @override
   Widget build(BuildContext context) {
     final b = widget.doc.data();
@@ -187,7 +231,7 @@ class _BankCardState extends State<BankCard> {
                   style: grey.copyWith(fontSize: 13, color: const Color(0xFF6B5300))),
             ),
             const SizedBox(height: 14),
-            if (sent)
+            if (b['status'] == 'CONFIRMED')
               Text('Transfer sent', style: grey.copyWith(fontSize: 16, fontWeight: FontWeight.w600))
             else if (!widget.readOnly)
               SizedBox(
@@ -197,7 +241,6 @@ class _BankCardState extends State<BankCard> {
                   style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1A73E8)),
                   onPressed: () async {
                     await widget.doc.reference.update({'status': 'CONFIRMED', 'decided_at': FieldValue.serverTimestamp()});
-                    setState(() => sent = true);
                   },
                   child: const Text('Confirm with TAN'),
                 ),

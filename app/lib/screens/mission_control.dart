@@ -404,7 +404,7 @@ class _Paper extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
                         decoration: BoxDecoration(border: Border.all(color: cLine), borderRadius: BorderRadius.circular(6)),
-                        child: Image.asset('assets/invoices/$fixture.png', height: 420, fit: BoxFit.contain),
+                        child: _InvoiceImage(fixture!, spans, inv['page_size'] as Map?),
                       ),
                     ),
                     if (blocked || lost) Stamp(lost ? 'LOST' : 'BLOCKED'),
@@ -427,6 +427,35 @@ class _Paper extends StatelessWidget {
   }
 }
 
+/// Invoice PNG at max height 420 with a red box over every hidden span (coordinates in PDF points).
+class _InvoiceImage extends StatelessWidget {
+  final String fixture;
+  final List spans;
+  final Map? page;
+  const _InvoiceImage(this.fixture, this.spans, this.page);
+  @override
+  Widget build(BuildContext context) {
+    const h = 420.0;
+    final pw = (page?['w'] as num?)?.toDouble() ?? 595.0, ph = (page?['h'] as num?)?.toDouble() ?? 842.0;
+    final w = h * pw / ph, sx = w / pw, sy = h / ph;
+    return SizedBox(
+      width: w,
+      height: h,
+      child: Stack(children: [
+        Image.asset('assets/invoices/$fixture.png', width: w, height: h, fit: BoxFit.fill),
+        for (final sp in spans)
+          Positioned(
+            left: (sp['x0'] as num) * sx - 3,
+            top: (sp['top'] as num) * sy - 3,
+            width: ((sp['x1'] as num) - (sp['x0'] as num)) * sx + 6,
+            height: (((sp['bottom'] as num) - (sp['top'] as num)) * sy).clamp(2.0, h) + 6,
+            child: Container(decoration: BoxDecoration(color: cBlock.withValues(alpha: 0.15), border: Border.all(color: cBlock, width: 2))),
+          ),
+      ]),
+    );
+  }
+}
+
 class _RightCard extends StatelessWidget {
   final Map<String, dynamic> inv;
   final String act;
@@ -440,27 +469,24 @@ class _RightCard extends StatelessWidget {
         ]),
       );
 
+  Widget mirror(Widget phoneCard) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: card(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text("On the CFO's phone", style: sans(size: 15, w: FontWeight.w600)),
+          const SizedBox(height: 10),
+          phoneCard,
+        ]),
+      );
+
   @override
-  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: db.collection('approvals').where('status', isEqualTo: 'PENDING').limit(1).snapshots(),
-        builder: (_, ap) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: db.collection('baseline_confirmations').where('status', isEqualTo: 'PENDING').limit(1).snapshots(),
-          builder: (_, bc) {
-            final pendingAp = ap.data?.docs.isNotEmpty ?? false;
-            final pendingBc = bc.data?.docs.isNotEmpty ?? false;
-            if (pendingAp || pendingBc) {
-              return Container(
-                padding: const EdgeInsets.all(14),
-                decoration: card(),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text("On the CFO's phone", style: sans(size: 15, w: FontWeight.w600)),
-                  const SizedBox(height: 10),
-                  pendingAp
-                      ? ApprovalCard(doc: ap.data!.docs.first, readOnly: true)
-                      : BankCard(doc: bc.data!.docs.first, readOnly: true),
-                ]),
-              );
-            }
+  Widget build(BuildContext context) => LiveDoc(
+        'approvals',
+        (d) => mirror(ApprovalCard(doc: d, readOnly: true)),
+        fallback: LiveDoc(
+          'baseline_confirmations',
+          (d) => mirror(BankCard(doc: d, readOnly: true)),
+          fallback: Builder(builder: (context) {
             if (act == '0') {
               return Container(
                 padding: const EdgeInsets.all(14),
@@ -523,7 +549,7 @@ class _RightCard extends StatelessWidget {
                 ],
               ]),
             );
-          },
+          }),
         ),
       );
 }

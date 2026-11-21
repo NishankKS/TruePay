@@ -13,6 +13,9 @@ def _client():
 
 def screen(text: str) -> dict:
     """-> {match: bool, confidence: str}"""
+    if config.SIM:
+        from backend import sim
+        return sim.screen(text)
     from google.cloud import modelarmor_v1 as ma
     res = _client().sanitize_user_prompt(request=ma.SanitizeUserPromptRequest(
         name=config.MODEL_ARMOR_TEMPLATE, user_prompt_data=ma.DataItem(text=text)))

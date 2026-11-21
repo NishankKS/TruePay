@@ -37,6 +37,9 @@ def _call_api(text: str) -> str:
 
 def extract(text: str) -> InvoiceFields:
     """Raises on model failure or schema violation; the pipeline turns that into QUARANTINED / PARSE_FAILED."""
+    if config.SIM:
+        from backend import sim
+        return sim.extract(text)
     raw = (_call_api if config.SENTINEL_BACKEND == "api" else _call_ollama)(text)
     raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
     return InvoiceFields.model_validate_json(raw)

@@ -116,6 +116,9 @@ def approval_listener(poll_s: float = 1.0):
                              f"Approval {aid}", invoice_id=a["invoice_id"], layer="L6", amount_cents=a["amount_cents"])
                 elif a["expires_at"] < datetime.now(timezone.utc):
                     g.store.update_approval(aid, status="EXPIRED")
+                    inv = g.store.invoice(a["invoice_id"]) or {}
+                    if inv.get("status") == "PENDING_APPROVAL":  # nobody approved in time: hold, a human looks
+                        g._hold(a.get("run_id") or "run-0000", inv, "Approval expired")
         except Exception as e:  # keep listening; execution itself fails closed
             print(f"approval listener: {e.__class__.__name__}: {e}")
         time.sleep(poll_s)

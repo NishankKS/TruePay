@@ -47,10 +47,16 @@ class FirestoreStore:
 
     # Sheets: vendor master + purchase orders
     def vendors(self):
+        if config.SIM:
+            from backend import sim
+            return sim.vendors()
         return [{**r, "vendor_id": str(r["vendor_id"]), "iban": normalize(str(r["iban"]))}
                 for r in self.sheet.worksheet("vendors").get_all_records()]
 
     def po(self, po_number):
+        if config.SIM:
+            from backend import sim
+            return sim.po(po_number)
         for r in self.sheet.worksheet("purchase_orders").get_all_records():
             if r["po_number"] == po_number:
                 return {"po_number": po_number, "vendor_id": r["vendor_id"], "status": r["status"],
@@ -58,12 +64,16 @@ class FirestoreStore:
         return None
 
     def reduce_po(self, po_number, cents):
+        if config.SIM:
+            return
         ws = self.sheet.worksheet("purchase_orders")
         cell = ws.find(po_number, in_column=1)
         po = self.po(po_number)
         ws.update_cell(cell.row, 4, eur(po["remaining_cents"] - cents))
 
     def ledger(self, row):
+        if config.SIM:
+            return  # no Sheet in sim; every decision is still an event
         cols = ["ts", "run_id", "invoice_id", "identity", "tool", "verdict", "codes", "amount_eur"]
         self._ledger_pool.submit(lambda: self.sheet.worksheet("audit_ledger").append_row([row[c] for c in cols]))
 

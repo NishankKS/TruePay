@@ -25,6 +25,10 @@ AI agents that read invoices add a new hole: one hidden sentence in a PDF become
 
 ## Architecture
 
+![Architecture](docs/architecture.png)
+
+<details><summary>Text version</summary>
+
 ```
  Flutter web (Mission Control / Approver / Report)  ──reads──►  Firestore (events, invoices, approvals, stats)
           │ writes commands + switches                                    ▲
@@ -38,6 +42,8 @@ AI agents that read invoices add a new hole: one hidden sentence in a PDF become
                                                                                      ▼
                                                      Google Sheets: vendor master, POs, audit ledger
 ```
+
+</details>
 
 Only `paygate` holds credentials that touch payments. Agents never see policy or keys; their identity token
 travels in an HTTP header the model never sees.

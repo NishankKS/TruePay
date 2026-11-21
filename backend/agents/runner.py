@@ -8,6 +8,7 @@ from pathlib import Path
 
 from google.cloud import firestore
 
+from backend import sim
 from backend.agents import callbacks, compromised_onboarding, controller
 from backend.common import config
 from backend.common.events import emit
@@ -22,6 +23,8 @@ TITLES = {"baseline": "Act 0: today, without IBAN-Wächter", "clean": "Act 1: a 
 
 def vendor_a2a_url() -> str | None:
     """A2A address from the vendor master (Sheets), never from invoice text. None -> INCONCLUSIVE -> HOLD."""
+    if config.SIM:
+        return "sim://mueller"
     try:
         import gspread
         rows = gspread.service_account(filename=config.env("GOOGLE_APPLICATION_CREDENTIALS", "sa.json")) \
@@ -54,7 +57,8 @@ async def handle(cmd: dict, a2a_url: str | None):
     scenario = cmd["scenario"]
     run_id, seq = new_run(scenario)
     callbacks.RUN.update(run_id=run_id, invoice_id=None)
-    emit(run_id, "intake" if scenario != "baseline" else "baseline", "STEP", "INFO", TITLES[scenario], f"Run {run_id}")
+    emit(run_id, "intake" if scenario != "baseline" else "baseline", "STEP", "INFO", TITLES[scenario],
+         f"Run {run_id}" + (" · SIMULATION: scripted agents, no Gemini/Model Armor/Sheets" if config.SIM else ""))
 
     if scenario == "insider":
         await compromised_onboarding.attack(run_id)
@@ -75,7 +79,8 @@ async def handle(cmd: dict, a2a_url: str | None):
     callbacks.RUN["invoice_id"] = doc["invoice_id"]
 
     l3_off = not layers["quarantine"]
-    final = await controller.run(doc["invoice_no"], a2a_url=a2a_url, raw_text=text if l3_off else None,
+    run_agents = sim.controller if config.SIM else controller.run
+    final = await run_agents(doc["invoice_no"], a2a_url=a2a_url, raw_text=text if l3_off else None,
                                  jailbroken=layers["jailbreak_controller"])
     inv = db().document(f"invoices/{doc['invoice_id']}").get().to_dict() or {}
     status = inv.get("status", "?")
@@ -86,7 +91,9 @@ async def handle(cmd: dict, a2a_url: str | None):
 
 
 def main():
-    if not config.GOOGLE_API_KEY:
+    if config.SIM:
+        print("runner: SIMULATION MODE (IW_SIM=1): scripted agents, no Gemini / Model Armor / Sheets")
+    elif not config.GOOGLE_API_KEY:
         print("runner: WARNING GOOGLE_API_KEY is empty in .env; agent runs will fail (see docs/SETUP.md step 4)")
     a2a_url = vendor_a2a_url()
     print(f"runner: listening on commands (vendor agent: {a2a_url})")
