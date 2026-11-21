@@ -1,0 +1,21 @@
+name: iban_waechter
+description: IBAN-Wächter Mission Control, Approver and Audit report.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  google_fonts: ^6.2.1
+  web: ^1.1.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/invoices/

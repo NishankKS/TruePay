@@ -12,3 +12,4 @@ functions/node_modules/
 functions/lib/
 .firebase/
 backend/fixtures/out/
+app/firebase.web.json

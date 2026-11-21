@@ -21,6 +21,11 @@ test:
 reset:
 	$(PY) -m backend.scripts.reset
 
-web:
-	cd app && flutter build web
+web: app/firebase.web.json
+	cd app && ([ -d web ] || flutter create --platforms=web,android --project-name iban_waechter .) && \
+	  flutter pub get && flutter build web --dart-define-from-file=firebase.web.json
 	firebase deploy --only hosting,firestore
+
+# Firebase web config (public values) for the Flutter app.
+app/firebase.web.json:
+	firebase apps:sdkconfig web --json | $(PY) -c "import json,sys; print(json.dumps(json.load(sys.stdin)['result']['sdkConfig']))" > $@
