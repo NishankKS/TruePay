@@ -268,12 +268,7 @@ class _SidebarState extends State<Sidebar> {
             child: Row(children: [
               Icon(demo ? Icons.bolt_rounded : Icons.cloud_rounded, size: 18, color: demo ? cActive : cMuted),
               const SizedBox(width: 8),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(demo ? 'Demo mode' : 'Live agents', style: sans(size: 13.5, w: FontWeight.w600)),
-                  Text(demo ? 'Cached agent responses · ~15 s' : 'Gemini · Model Armor · Gemma', style: sans(size: 12, c: cMuted)),
-                ]),
-              ),
+              Expanded(child: Text(demo ? 'Demo mode' : 'Live agents', style: sans(size: 13.5, w: FontWeight.w600))),
               Transform.scale(scale: 0.85, child: Switch(value: demo, onChanged: widget.busy ? null : (v) => setState(() => demo = v))),
             ]),
           ),
