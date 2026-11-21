@@ -22,7 +22,7 @@ from backend.common.iban import normalize
 from backend.common.money import to_cents
 from backend.scripts.seed import POS, VENDORS
 
-PAUSE = 1.2  # seconds between steps, so the UI animates like a live run
+PAUSE = 0.6  # seconds between steps: fast, but every step is still visible
 
 # ---------------------------------------------------------------- Sheet stand-in
 def _rows(table):

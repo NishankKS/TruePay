@@ -16,3 +16,4 @@ app/firebase.web.json
 *-debug.log
 UI.pdf
 app/demo_accounts.json
+audit_ledger.csv

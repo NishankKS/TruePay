@@ -26,6 +26,9 @@ def vendor_a2a_url() -> str | None:
     """A2A address from the vendor master (Sheets), never from invoice text. None -> INCONCLUSIVE -> HOLD."""
     if config.SIM:
         return "sim://mueller"
+    if config.LOCAL_MASTER:  # no Sheet: the seed vendor master
+        from backend.scripts.seed import VENDORS
+        return dict(zip(VENDORS[0], VENDORS[1]))["a2a_url"]
     try:
         import gspread
         rows = gspread.service_account(filename=config.env("GOOGLE_APPLICATION_CREDENTIALS", "sa.json")) \

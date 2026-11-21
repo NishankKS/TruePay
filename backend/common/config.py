@@ -25,6 +25,8 @@ POLICY_FILE = ROOT / env("POLICY_FILE", "./policy/paygate.yaml")
 APPROVAL_SECRET = env("APPROVAL_SECRET")
 APPROVER_UID = env("APPROVER_UID")
 SIM = env("IW_SIM") == "1"  # keyless rehearsal mode, see backend/sim.py
+# No Sheet configured: vendor master + POs come from the seed tables, the audit ledger goes to audit_ledger.csv
+LOCAL_MASTER = SIM or not SHEET_ID
 
 # token -> identity (PRD §6 Identities). Empty tokens never match.
 TOKENS = {

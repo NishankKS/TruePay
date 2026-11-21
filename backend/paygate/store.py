@@ -11,6 +11,9 @@ from backend.common.iban import normalize
 from backend.common.money import eur, to_cents
 
 
+LEDGER_COLS = ["ts", "run_id", "invoice_id", "identity", "tool", "verdict", "codes", "amount_eur"]
+
+
 def _cents(v) -> int:
     """Sheet cell (4280, 4280.5, '4,280.00') -> cents, via Decimal."""
     return to_cents(f"{Decimal(str(v).replace(',', '')):.2f}")
@@ -47,14 +50,14 @@ class FirestoreStore:
 
     # Sheets: vendor master + purchase orders
     def vendors(self):
-        if config.SIM:
+        if config.LOCAL_MASTER:
             from backend import sim
             return sim.vendors()
         return [{**r, "vendor_id": str(r["vendor_id"]), "iban": normalize(str(r["iban"]))}
                 for r in self.sheet.worksheet("vendors").get_all_records()]
 
     def po(self, po_number):
-        if config.SIM:
+        if config.LOCAL_MASTER:
             from backend import sim
             return sim.po(po_number)
         for r in self.sheet.worksheet("purchase_orders").get_all_records():
@@ -64,7 +67,7 @@ class FirestoreStore:
         return None
 
     def reduce_po(self, po_number, cents):
-        if config.SIM:
+        if config.LOCAL_MASTER:
             return
         ws = self.sheet.worksheet("purchase_orders")
         cell = ws.find(po_number, in_column=1)
@@ -72,10 +75,17 @@ class FirestoreStore:
         ws.update_cell(cell.row, 4, eur(po["remaining_cents"] - cents))
 
     def ledger(self, row):
-        if config.SIM:
-            return  # no Sheet in sim; every decision is still an event
-        cols = ["ts", "run_id", "invoice_id", "identity", "tool", "verdict", "codes", "amount_eur"]
-        self._ledger_pool.submit(lambda: self.sheet.worksheet("audit_ledger").append_row([row[c] for c in cols]))
+        if config.LOCAL_MASTER:  # no Sheet: append-only local CSV (every decision is also an event)
+            import csv
+            path = config.ROOT / "audit_ledger.csv"
+            new = not path.exists()
+            with open(path, "a", newline="") as f:
+                w = csv.writer(f)
+                if new:
+                    w.writerow(LEDGER_COLS)
+                w.writerow([row[c] for c in LEDGER_COLS])
+            return
+        self._ledger_pool.submit(lambda: self.sheet.worksheet("audit_ledger").append_row([row[c] for c in LEDGER_COLS]))
 
     # payments / approvals
     def payments(self, vendor_id):

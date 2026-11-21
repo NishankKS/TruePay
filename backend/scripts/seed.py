@@ -53,5 +53,7 @@ def seed_sheet(ledger=True):
 
 
 if __name__ == "__main__":
-    seed_sheet(); seed_firestore()
+    if not config.LOCAL_MASTER:
+        seed_sheet()
+    seed_firestore()
     print("seeded: Sheet tabs, config/layers, config/runtime, stats/demo, 6 historic payments")

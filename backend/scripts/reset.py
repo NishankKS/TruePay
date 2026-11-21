@@ -28,6 +28,6 @@ if __name__ == "__main__":
     d.document("config/layers").set(config.DEFAULT_LAYERS)
     d.document("config/runtime").set({"current_run_id": "run-0000", "current_scenario": None, "run_seq": 0,
                                       "session_started_at": datetime.now(timezone.utc), "revoked": []})
-    if not config.SIM:
+    if not config.LOCAL_MASTER:
         seed_sheet(ledger=True)  # restores PO amounts and empties the ledger
     print("reset:", counts)

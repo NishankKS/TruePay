@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 
 // Design tokens: PreventNet design system (local/ui.css), light mode. Semantic colours keep one meaning each.
 const cPage = Color(0xFFF2F2F6), cSurface = Color(0xFFFFFFFF), cRaised = Color(0xFFF7F7FB);
-const cInk = Color(0xFF15151C), cMuted = Color(0xFF5D5D6C), cLine = Color(0xFFEBEBF1), cLine2 = Color(0xFFDFDFE8);
+const cInk = Color(0xFF111118), cMuted = Color(0xFF45454F), cLine = Color(0xFFEBEBF1), cLine2 = Color(0xFFDFDFE8);
 const cActive = Color(0xFF5B4EE6), cActiveTint = Color(0xFFEFEDFE), cViolet = Color(0xFF7D72F6), cCyan = Color(0xFF139A8F);
 const cNavy = Color(0xFF15151C), cConsole = Color(0xFF15151C);
 const cPass = Color(0xFF178F60), cPassTint = Color(0xFFE4F5ED);
 const cBlock = Color(0xFFD64541), cBlockTint = Color(0xFFFCEBEA);
 const cHold = Color(0xFFB87404), cHoldTint = Color(0xFFFDF1DC);
-const cIdle = Color(0xFF9898A7), cIdleTint = Color(0xFFF4F4F8);
+const cIdle = Color(0xFF6E6E7C), cIdleTint = Color(0xFFF4F4F8);
 
 /// PreventNet hero: deep violet (--hero-a -> --hero-b, 120deg).
 const heroGradient = LinearGradient(
@@ -20,15 +20,16 @@ const accentGradient = LinearGradient(
 
 // Geist / Geist Mono (bundled, OFL). PreventNet uses weights 400-600 only: anything heavier is capped at 600.
 FontWeight _cap(FontWeight w) => w.value > 600 ? FontWeight.w600 : w;
+const typeScale = 1.15; // projector legibility: every size in the app x1.15
 TextStyle _geist(String family, double size, FontWeight w, Color c, {double? spacing}) => TextStyle(
-    fontFamily: family, fontSize: size, fontWeight: _cap(w), color: c, height: 1.45, letterSpacing: spacing,
+    fontFamily: family, fontSize: size * typeScale, fontWeight: _cap(w), color: c, height: 1.45, letterSpacing: spacing,
     fontVariations: [FontVariation('wght', _cap(w).value.toDouble())]);
 
 /// Body 14, small 12.5; h1 22, h2 17, h3 14 (all 600, -0.01em).
 TextStyle sans({double size = 14, FontWeight w = FontWeight.w400, Color c = cInk}) =>
     _geist('Geist', size, w, c, spacing: size >= 17 ? -0.01 * size : 0);
 TextStyle mono({double size = 12.5, FontWeight w = FontWeight.w400, Color c = cInk}) => _geist('GeistMono', size, w, c);
-TextStyle kpi(Color c) => _geist('Geist', 28, FontWeight.w600, c, spacing: -0.56)
+TextStyle kpi(Color c) => _geist('Geist', 30, FontWeight.w600, c, spacing: -0.6)
     .copyWith(height: 1.15, fontFeatures: const [FontFeature.tabularFigures()]);
 
 ThemeData appTheme() => ThemeData(

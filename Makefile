@@ -2,7 +2,7 @@ PY ?= .venv/bin/python
 # Tools installed in user space by the setup (docs/SETUP.md step 1)
 export PATH := $(HOME)/tools/flutter/bin:$(HOME)/tools/google-cloud-sdk/bin:$(HOME)/tools/tmuxenv/bin:$(PATH)
 
-.PHONY: fixtures seed up test reset web check-env install emu sim sim-reset functions vendor-cloudrun
+.PHONY: fixtures seed up test reset web check-env install emu sim sim-reset demo demo-reset functions vendor-cloudrun
 
 # Should: Genkit auditSummary (needs Blaze plan + Gemini key as a function secret)
 # Should: Müller's vendor agent on Cloud Run. Afterwards put the printed URL into the Sheet (vendors.a2a_url).
@@ -20,6 +20,10 @@ functions:
 # Keyless rehearsal: emulators + real paygate + scripted agents + UI on http://localhost:5000 (docs/SETUP.md)
 sim:
 	./scripts/sim.sh
+
+# Stage demo = the keyless sim: real firewall/rules/approvals/logs, fast scripted agents, no cloud dependency.
+demo: sim
+demo-reset: sim-reset
 
 sim-reset:
 	IW_SIM=1 FIRESTORE_EMULATOR_HOST=localhost:8085 GCP_PROJECT=demo-iw $(PY) -m backend.scripts.reset
@@ -44,11 +48,12 @@ seed:
 KEEP = ; echo; echo '[exited - press enter]'; read _
 up:
 	tmux kill-session -t iw 2>/dev/null || true
-	tmux new-session -d -s iw -x 200 -y 50 "$(PY) -m backend.agents.runner $(KEEP)" \; \
+	tmux new-session -d -s iw -x 220 -y 55 "$(PY) -m backend.agents.runner $(KEEP)" \; \
 	  split-window -v "$(PY) -m backend.paygate.server $(KEEP)" \; \
 	  split-window -h "$(PY) -m uvicorn backend.vendor_agent.a2a_app:app --port 8002 $(KEEP)" \; \
-	  split-window -h "(curl -sf localhost:11434 >/dev/null && echo 'ollama already running' || ollama serve) $(KEEP)" \; \
-	  select-pane -t 0 \; attach
+	  split-window -h "$(PY) scripts/spa.py app/build/web 5000 $(KEEP)" \; \
+	  select-pane -t 0
+	@echo "Mission Control: http://localhost:5000   Phone: http://localhost:5000/approve   Terminal: tmux attach -t iw"
 
 test:
 	$(PY) -m pytest tests/ -q

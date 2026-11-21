@@ -79,7 +79,7 @@ class _LiveDocState extends State<LiveDoc> {
       );
 }
 
-// ---------------------------------------------------------------- IBAN-Wächter approval card
+// ---------------------------------------------------------------- ibanned approval card
 class ApprovalCard extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> doc;
   final bool readOnly;
@@ -185,7 +185,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
   }
 }
 
-// ---------------------------------------------------------------- Act 0: a generic bank app, NOT IBAN-Wächter
+// ---------------------------------------------------------------- Act 0: a generic bank app, NOT ibanned
 class BankCard extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> doc;
   final bool readOnly;

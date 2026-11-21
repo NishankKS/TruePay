@@ -21,15 +21,15 @@ String actOf(String? scenario, Map<String, dynamic> layers) => switch (scenario)
     };
 
 const banners = {
-  'idle': ('Ready when you are', 'Pick a scenario on the left to start a run.'),
-  '0': ('Act 0 · Today, without IBAN-Wächter',
-      "Simulation of today's process. IBAN-Wächter is not involved and none of its data is touched."),
+  'idle': ('Ready', 'Pick an act on the left to start.'),
+  '0': ('Act 0 · Life without ibanned',
+      "Today's invoice automation. ibanned is not involved."),
   '1': ('Act 1 · A clean invoice', 'Müller Bürobedarf, €4,280. Every check should pass.'),
   '2': ('Act 2 · A poisoned invoice', 'Hidden instructions for the AI, invisible to people.'),
-  '3': ('Act 3 · The same invoice, now with IBAN-Wächter', 'The IBAN swap from Act 0 meets the crew.'),
+  '3': ('Act 3 · The same invoice, now with ibanned', 'The IBAN swap from Act 0 meets the crew.'),
   '4': ('Act 4 · A compromised insider component', "An attacker controls the onboarding component's code."),
   '5': ('Act 5 · AI defenses off, controller jailbroken', 'Assume breach: only the firewall and the human remain.'),
-  'judge': ('Judge mode', 'Your text, printed on a clean invoice.'),
+  'judge': ('Extra run', 'A custom invoice.'),
 };
 
 /// Rough number of events per act, for the progress bar while a run is in flight.
@@ -118,7 +118,7 @@ class _MissionControlState extends State<MissionControl> {
                 final act = actOf(scenario, layers);
                 final running = cSnap.data?.docs.isNotEmpty ?? false;
                 return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Sidebar(layers: layers, busy: running, currentScenario: scenario),
+                  Sidebar(busy: running, currentAct: act),
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
@@ -174,27 +174,23 @@ Widget spinner({double size = 16, Color c = cActive}) =>
 
 // ---------------------------------------------------------------- sidebar
 class Sidebar extends StatefulWidget {
-  final Map<String, dynamic> layers;
   final bool busy;
-  final String? currentScenario;
-  const Sidebar({super.key, required this.layers, required this.busy, this.currentScenario});
+  final String currentAct;
+  const Sidebar({super.key, required this.busy, required this.currentAct});
   @override
   State<Sidebar> createState() => _SidebarState();
 }
 
 class _SidebarState extends State<Sidebar> {
-  final note = TextEditingController();
-
-  Future<void> run(String scenario, {String? text}) => db.collection('commands').add({
-        'scenario': scenario,
-        'status': 'NEW',
-        'created_at': FieldValue.serverTimestamp(),
-        if (text != null) 'note': text.length > 500 ? text.substring(0, 500) : text,
-      });
+  /// One click per act: set the layer switches the act needs, then queue the command (rules allow both).
+  Future<void> run(Scenario s) async {
+    await db.doc('config/layers').update(Map<String, Object>.from(s.act == '5' ? breachLayers : defaultLayers));
+    await db.collection('commands').add({'scenario': s.key, 'status': 'NEW', 'created_at': FieldValue.serverTimestamp()});
+  }
 
   Widget _scenario(Scenario s) {
-    final baseline = s.act == '0';
-    final active = widget.currentScenario == s.key && widget.busy;
+    final dim = s.act == '0' || s.act == '5';
+    final active = widget.busy && widget.currentAct == s.act;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Material(
@@ -202,34 +198,32 @@ class _SidebarState extends State<Sidebar> {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: widget.busy ? null : () => run(s.key),
+          onTap: widget.busy ? null : () => run(s),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: active ? cActive.withValues(alpha: 0.35) : (baseline ? cLine : Colors.transparent)),
+              border: Border.all(color: active ? cActive.withValues(alpha: 0.35) : cLine),
             ),
             child: Row(children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 34,
+                height: 34,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  gradient: baseline ? null : accentGradient,
-                  color: baseline ? cIdleTint : null,
-                  borderRadius: BorderRadius.circular(9),
-                  border: baseline ? Border.all(color: cLine) : null,
+                  gradient: dim ? null : accentGradient,
+                  color: s.act == '0' ? cIdleTint : (s.act == '5' ? cBlockTint : null),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: active
-                    ? spinner(size: 14, c: Colors.white)
-                    : Text(s.button, style: sans(size: 14, w: FontWeight.w700, c: baseline ? cMuted : Colors.white)),
+                    ? spinner(size: 15, c: dim ? cActive : Colors.white)
+                    : Text(s.button, style: sans(size: 14, w: FontWeight.w600, c: s.act == '0' ? cMuted : (s.act == '5' ? cBlock : Colors.white))),
               ),
-              const SizedBox(width: 11),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(s.title, style: sans(size: 13.5, w: FontWeight.w600, c: widget.busy && !active ? cIdle : cInk),
-                      overflow: TextOverflow.ellipsis),
-                  Text(s.subtitle, style: sans(size: 12, c: cMuted), overflow: TextOverflow.ellipsis),
+                  Text(s.title, style: sans(size: 14, w: FontWeight.w600, c: widget.busy && !active ? cIdle : cInk), overflow: TextOverflow.ellipsis),
+                  Text(s.subtitle, style: sans(size: 12.5, c: cMuted), overflow: TextOverflow.ellipsis),
                 ]),
               ),
             ]),
@@ -239,153 +233,66 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget _switch(String key, String label, {bool hold = false}) {
-    final on = widget.layers[key] == true;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(children: [
-        Expanded(child: Text(label, style: sans(size: 13, c: on && hold ? cHold : cInk))),
-        Transform.scale(
-          scale: 0.8,
-          child: Switch(
-            value: on,
-            activeTrackColor: hold ? cHold : cActive,
-            onChanged: (v) => db.doc('config/layers').update({key: v}),
-          ),
-        ),
-      ]),
-    );
-  }
-
-  Widget _locked(String label) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(children: [
-          const Icon(Icons.lock_rounded, size: 15, color: cPass),
-          const SizedBox(width: 8),
-          Expanded(child: Text(label, style: sans(size: 13))),
-          chip('ALWAYS ON', cPass, cPassTint),
-        ]),
-      );
-
   @override
   Widget build(BuildContext context) => Container(
-        width: 272,
+        width: 290,
         decoration: const BoxDecoration(color: cSurface, border: Border(right: BorderSide(color: cLine))),
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 20, 16, 20), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(18, 22, 18, 22), children: [
           Row(children: [
             Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(gradient: accentGradient, borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 21),
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(gradient: accentGradient, borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [BoxShadow(color: Color(0x4D5B4EE6), blurRadius: 12, offset: Offset(0, 4))]),
+              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
             ),
-            const SizedBox(width: 11),
+            const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('IBAN-Wächter', style: sans(size: 17, w: FontWeight.w600)),
-              Text('Zero-trust accounts payable', style: sans(size: 12, c: cMuted)),
+              Text('ibanned', style: sans(size: 19, w: FontWeight.w600)),
+              Text('No fake IBAN gets paid', style: sans(size: 12.5, c: cMuted)),
             ]),
           ]),
-          overline('Scenarios'),
+          overline('Demo'),
           for (final s in scenarioButtons) _scenario(s),
-          overline('Judge mode'),
-          TextField(
-            controller: note,
-            maxLines: 3,
-            maxLength: 500,
-            style: sans(size: 13),
-            decoration: InputDecoration(
-              isDense: true,
-              filled: true,
-              fillColor: cIdleTint,
-              hintText: 'Type an attack to print on the invoice…',
-              hintStyle: sans(size: 13, c: cIdle),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: cLine)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: cLine)),
-            ),
-          ),
-          SizedBox(
-            height: 42,
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: cNavy, shape: const StadiumBorder()),
-              onPressed: widget.busy ? null : () => run('judge', text: note.text),
-              icon: const Icon(Icons.bolt_rounded, size: 18),
-              label: Text('Run attack', style: sans(c: Colors.white, w: FontWeight.w600)),
-            ),
-          ),
-          overline('Breach simulation'),
-          _switch('hidden_text', 'L1 Hidden-text scan'),
-          _switch('model_armor', 'L2 Model Armor'),
-          _switch('quarantine', 'L3 Gemma quarantine'),
-          _switch('jailbreak_controller', 'Jailbreak controller', hold: true),
-          const SizedBox(height: 6),
-          _locked('L5 Action Firewall'),
-          _locked('L6 Human approval'),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: card(color: cIdleTint, r: 14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Row(children: [
-                CircleAvatar(radius: 16, backgroundColor: cActiveTint, child: Text('AP', style: sans(size: 12, w: FontWeight.w700, c: cActive))),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('AP lead', style: sans(size: 13, w: FontWeight.w600)),
-                    Text(FirebaseAuth.instance.currentUser?.email ?? '', style: sans(size: 11.5, c: cMuted), overflow: TextOverflow.ellipsis),
-                  ]),
-                ),
-              ]),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(shape: const StadiumBorder(), foregroundColor: cInk, side: const BorderSide(color: cLine2)),
-                onPressed: () => Navigator.pushNamed(context, '/report'),
-                icon: const Icon(Icons.receipt_long_rounded, size: 16),
-                label: const Text('Open audit report'),
-              ),
-            ]),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+                shape: const StadiumBorder(), foregroundColor: cInk, side: const BorderSide(color: cLine2), padding: const EdgeInsets.symmetric(vertical: 14)),
+            onPressed: () => Navigator.pushNamed(context, '/report'),
+            icon: const Icon(Icons.receipt_long_rounded, size: 18),
+            label: Text('Audit report', style: sans(w: FontWeight.w500)),
           ),
         ]),
       );
 }
 
 // ---------------------------------------------------------------- top bar + KPIs
+const presenterName = 'Nishank';
+
 class TopBar extends StatelessWidget {
   final String act, runId;
   final bool running;
   const TopBar({super.key, required this.act, required this.running, required this.runId});
   @override
-  Widget build(BuildContext context) {
-    final b = banners[act]!;
-    return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-      Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(b.$1, style: sans(size: 22, w: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(b.$2, style: sans(size: 14, c: cMuted)),
-        ]),
-      ),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(color: cSurface, borderRadius: BorderRadius.circular(999), border: Border.all(color: cLine)),
-        child: Row(children: [
-          Container(width: 8, height: 8, decoration: const BoxDecoration(color: cPass, shape: BoxShape.circle)),
-          const SizedBox(width: 8),
-          Text('Firewall online', style: sans(size: 13, w: FontWeight.w600)),
-        ]),
-      ),
-      const SizedBox(width: 10),
-      AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(color: running ? cNavy : cSurface, borderRadius: BorderRadius.circular(999), border: Border.all(color: running ? cNavy : cLine)),
-        child: Row(children: [
-          if (running) spinner(size: 14, c: Colors.white) else const Icon(Icons.check_circle_rounded, size: 16, color: cPass),
-          const SizedBox(width: 8),
-          Text(running ? 'Agents working…' : 'Idle · $runId', style: sans(size: 13, w: FontWeight.w600, c: running ? Colors.white : cInk)),
-        ]),
-      ),
-    ]);
-  }
+  Widget build(BuildContext context) => Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Hi, $presenterName', style: sans(size: 24, w: FontWeight.w600)),
+            const SizedBox(height: 2),
+            Text("Review today's invoices. Agents decide, code enforces, you approve.", style: sans(size: 14.5, c: cMuted)),
+          ]),
+        ),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(color: running ? cNavy : cSurface, borderRadius: BorderRadius.circular(999), border: Border.all(color: running ? cNavy : cLine2)),
+          child: Row(children: [
+            if (running) spinner(size: 15, c: Colors.white) else const Icon(Icons.verified_user_rounded, size: 17, color: cPass),
+            const SizedBox(width: 8),
+            Text(running ? 'Agents working…' : 'Firewall on · all clear', style: sans(size: 13.5, w: FontWeight.w600, c: running ? Colors.white : cInk)),
+          ]),
+        ),
+      ]);
 }
 
 class KpiRow extends StatelessWidget {
@@ -434,7 +341,7 @@ class KpiRow extends StatelessWidget {
                 child: Row(children: [
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text('Blocked by IBAN-Wächter', style: sans(size: 13, c: Colors.white70, w: FontWeight.w500)),
+                      Text('Blocked by ibanned', style: sans(size: 13, c: Colors.white70, w: FontWeight.w500)),
                       _counter(d['blocked_cents'], kpi(Colors.white).copyWith(fontSize: 32)),
                     ]),
                   ),
@@ -447,7 +354,7 @@ class KpiRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 14),
-            _tile(Icons.trending_down_rounded, 'Lost without IBAN-Wächter', d['lost_cents'], cBlock, cBlockTint),
+            _tile(Icons.trending_down_rounded, 'Lost without ibanned', d['lost_cents'], cBlock, cBlockTint),
             const SizedBox(width: 14),
             _tile(Icons.payments_rounded, 'Paid', d['paid_cents'], cInk, cPassTint),
             const SizedBox(width: 14),
@@ -503,7 +410,9 @@ class Pipeline extends StatelessWidget {
             }
             final idx = current == null ? (running ? 0 : -1) : nodes.indexOf(current);
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              sectionTitle('Agent pipeline',
+              Text(banners[act]!.$1, style: sans(size: 12.5, w: FontWeight.w600, c: cActive)),
+              const SizedBox(height: 2),
+              sectionTitle(banners[act]!.$2,
                   trailing: chip(running ? 'LIVE' : (evs.isEmpty ? 'STANDBY' : 'COMPLETE'),
                       running ? cActive : (evs.isEmpty ? cIdle : cPass), running ? cActiveTint : (evs.isEmpty ? cIdleTint : cPassTint))),
               LayoutBuilder(builder: (context, box) {
