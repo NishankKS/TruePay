@@ -183,7 +183,7 @@ class _LeftRailState extends State<LeftRail> {
       contentPadding: EdgeInsets.zero,
       title: Text(label, style: sans(size: 13.5)),
       value: on,
-      activeColor: hold ? cHold : cActive,
+      activeThumbColor: hold ? cHold : cActive,
       onChanged: (v) => db.doc('config/layers').update({key: v}),
     );
   }
@@ -245,7 +245,10 @@ class _LeftRailState extends State<LeftRail> {
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(), isDense: true, hintText: 'Type an attack to print on the invoice'),
               ),
-              FilledButton(onPressed: busy ? null : () => run('judge', text: note.text), child: const Text('Run attack')),
+              FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: cActive, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  onPressed: busy ? null : () => run('judge', text: note.text),
+                  child: const Text('Run attack')),
               const SizedBox(height: 14),
               Text('Breach simulation', style: sans(size: 15, w: FontWeight.w600)),
               _switch('hidden_text', 'L1 Hidden-text scan'),
@@ -347,7 +350,7 @@ class _Node extends StatelessWidget {
       ),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(icon, color: c, size: 20),
-        Text(label, textAlign: TextAlign.center, style: sans(size: 13, w: FontWeight.w600)),
+        FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, style: sans(size: 13, w: FontWeight.w600))),
         if (dashed) Text('A2A', style: mono(size: 11, c: cMuted)),
         Text(notInstalled ? 'Not installed' : (ev?['title'] ?? 'Idle'),
             maxLines: 1, overflow: TextOverflow.ellipsis, style: sans(size: 11.5, c: cMuted)),
@@ -594,7 +597,7 @@ class LayerRail extends StatelessWidget {
       tween: Tween(begin: 1, end: 0),
       duration: const Duration(milliseconds: 600),
       builder: (_, x, child) => Container(
-        decoration: BoxDecoration(color: cBlock.withOpacity(0.35 * x), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: cBlock.withValues(alpha: 0.35 * x), borderRadius: BorderRadius.circular(10)),
         child: child,
       ),
       child: row,

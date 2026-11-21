@@ -93,3 +93,15 @@ make reset          # between rehearsals
 
 Mission Control: `https://<project-id>.web.app/` (operator). Phone: `https://<project-id>.web.app/approve` (approver).
 Fallback without Hosting: `cd app && flutter run -d chrome --dart-define-from-file=firebase.web.json`.
+
+## Try it without any keys (local emulators)
+
+```bash
+make emu                                                   # terminal 1: Firestore :8085 + Auth :9099, real rules
+export FIRESTORE_EMULATOR_HOST=localhost:8085 GCP_PROJECT=demo-iw
+.venv/bin/python -m backend.scripts.emu_seed               # config + operator/approver (password demo1234)
+.venv/bin/python -m backend.scripts.fake_run               # scripted Act 2 events for the UI
+cd app && flutter run -d chrome --dart-define=EMULATOR=true   # Mission Control; /approve for the phone
+```
+
+Act 4 and Act 0 also run fully on the emulator (no Gemini needed). Acts 1–3 and 5 need `GOOGLE_API_KEY` and the Sheet.

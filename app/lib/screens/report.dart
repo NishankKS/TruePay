@@ -64,7 +64,7 @@ class ReportScreen extends StatelessWidget {
                       Table(
                         columnWidths: const {
                           0: FixedColumnWidth(72), 1: FixedColumnWidth(76), 2: FixedColumnWidth(96),
-                          3: FixedColumnWidth(36), 4: FixedColumnWidth(64), 5: FlexColumnWidth(),
+                          3: FixedColumnWidth(48), 4: FixedColumnWidth(64), 5: FlexColumnWidth(),
                         },
                         border: const TableBorder(horizontalInside: BorderSide(color: cLine)),
                         children: [

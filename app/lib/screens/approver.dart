@@ -13,6 +13,7 @@ class ApproverScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: cSurface,
         title: Text('Approvals', style: sans(size: 18, w: FontWeight.w600)),
         actions: [Padding(padding: const EdgeInsets.only(right: 12), child: Center(child: Text(user?.email ?? '', style: sans(size: 12.5, c: cMuted))))],

@@ -44,7 +44,7 @@ def main():
         dict(actor="controller", type="TOOL_CALL", verdict="INFO", tool="get_invoice", title="get_invoice(INV-1002)", detail="status QUARANTINED; " + NOTICE),
         dict(actor="controller", type="TOOL_CALL", verdict="INFO", tool="place_hold", title="place_hold(INV-1002)", detail="failed intake screening"),
         dict(actor="firewall", type="DECISION", layer="L5", verdict="ALLOW", tool="place_hold", title="ALLOW place_hold → HOLD", detail="controller · place_hold · INV-1002-99"),
-        dict(actor="firewall", type="ALERT", layer="L5", verdict="BLOCK", title="Invoice on HOLD: INV-1002", detail="failed intake screening", amount_cents=amount),
+        dict(actor="firewall", type="ALERT", verdict="BLOCK", title="Invoice on HOLD: INV-1002", detail="failed intake screening", amount_cents=amount),
         dict(actor="controller", type="DECISION", verdict="BLOCK", title="Decision: HOLD", detail="Invoice failed intake screening"),
     ]
     status_after = {4: "QUARANTINED", 8: "HOLD"}

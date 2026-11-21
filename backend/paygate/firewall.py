@@ -157,8 +157,9 @@ class Gate:
             self.store.incr_stats(blocked_cents=inv["amount_cents"])
         self.store.update_invoice(inv["invoice_id"], **upd)
         inv.update(upd)
+        # no layer: the L5 row shows firewall decisions (ALLOW/DENY), not the hold itself
         emit(run_id, "firewall", "ALERT", "BLOCK", f"Invoice on HOLD: {inv['invoice_no']}", reason,
-             invoice_id=inv["invoice_id"], layer="L5", tool="place_hold", amount_cents=inv["amount_cents"])
+             invoice_id=inv["invoice_id"], tool="place_hold", amount_cents=inv["amount_cents"])
 
     def rule_activation(self, req_iban: str, req_cents: int, inv: dict, exclude_approval=None) -> dict:
         vendor = self._invoice_vendor(inv) or {}

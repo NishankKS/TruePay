@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'screens/approver.dart';
 import 'screens/mission_control.dart';
@@ -21,11 +22,16 @@ const _opts = FirebaseOptions(
 );
 
 Future<void> main() async {
+  usePathUrlStrategy(); // /approve and /report as real paths (Hosting rewrites to index.html)
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: _opts);
   if (_emulator) {
     FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8085);
     await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    const autoLogin = String.fromEnvironment('AUTO_LOGIN'); // emulator only: headless screenshots
+    if (autoLogin.isNotEmpty) {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: autoLogin, password: 'demo1234');
+    }
   }
   runApp(const App());
 }
