@@ -1,5 +1,6 @@
 """Runner: one command at a time from Firestore `commands` (NEW -> RUNNING -> DONE/ERROR). python -m backend.agents.runner"""
 import asyncio
+import os
 import tempfile
 import time
 import traceback
@@ -80,8 +81,17 @@ async def handle(cmd: dict, a2a_url: str | None):
 
     l3_off = not layers["quarantine"]
     run_agents = sim.controller if config.SIM else controller.run
-    final = await run_agents(doc["invoice_no"], a2a_url=a2a_url, raw_text=text if l3_off else None,
-                                 jailbroken=layers["jailbreak_controller"])
+    kwargs = dict(a2a_url=a2a_url, raw_text=text if l3_off else None, jailbroken=layers["jailbreak_controller"])
+    try:
+        final = await run_agents(doc["invoice_no"], **kwargs)
+    except Exception as e:  # Gemini 429/503 at event load: one retry on the backup key (paygate still decides money)
+        backup = config.env("GOOGLE_API_KEY_FALLBACK")
+        if config.SIM or not backup or os.environ.get("GOOGLE_API_KEY") == backup:
+            raise
+        os.environ["GOOGLE_API_KEY"] = backup
+        emit(run_id, "controller", "STEP", "INFO", "Switched to backup Gemini key", e.__class__.__name__,
+             invoice_id=doc["invoice_id"])
+        final = await run_agents(doc["invoice_no"], **kwargs)
     inv = db().document(f"invoices/{doc['invoice_id']}").get().to_dict() or {}
     status = inv.get("status", "?")
     verdict = {"HOLD": "BLOCK", "PENDING_APPROVAL": "ALLOW", "PAID": "ALLOW"}.get(status, "INFO")
