@@ -86,6 +86,8 @@ async def handle(cmd: dict, a2a_url: str | None):
 
 
 def main():
+    if not config.GOOGLE_API_KEY:
+        print("runner: WARNING GOOGLE_API_KEY is empty in .env; agent runs will fail (see docs/SETUP.md step 4)")
     a2a_url = vendor_a2a_url()
     print(f"runner: listening on commands (vendor agent: {a2a_url})")
     col = db().collection("commands")
@@ -99,9 +101,12 @@ def main():
                     raise ValueError(f"unknown scenario {cmd.get('scenario')!r}")
                 asyncio.run(handle(cmd, a2a_url))
                 snap.reference.update({"status": "DONE"})
-            except Exception:
+            except Exception as e:
                 traceback.print_exc()
                 snap.reference.update({"status": "ERROR"})
+                run_id = (db().document("config/runtime").get().to_dict() or {}).get("current_run_id", "run-0000")
+                emit(run_id, "controller", "STEP", "INFO", f"Run failed: {e.__class__.__name__}",
+                     str(e)[:200] or "see the runner terminal", invoice_id=callbacks.RUN.get("invoice_id"))
         time.sleep(0.5)
 
 

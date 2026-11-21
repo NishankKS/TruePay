@@ -362,3 +362,9 @@ com.google.cloud.datastore.core.exception.DatastoreException: No matching allow 
 [debug] [2026-11-21T11:50:07.916Z] Nov 21, 2026 12:50:07 PM io.gapi.emulators.netty.HttpHandler$1 onError
 INFO: Exception when handling request: PERMISSION_DENIED: No matching allow statements
  {"metadata":{"emulator":{"name":"firestore"},"message":"Nov 21, 2026 12:50:07 PM io.gapi.emulators.netty.HttpHandler$1 onError\nINFO: Exception when handling request: PERMISSION_DENIED: No matching allow statements\n"}}
+[debug] [2026-11-21T11:50:56.766Z] Nov 21, 2026 12:50:56 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Nov 21, 2026 12:50:56 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2026-11-21T11:51:27.069Z] Nov 21, 2026 12:51:27 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Nov 21, 2026 12:51:27 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}

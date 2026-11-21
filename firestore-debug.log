@@ -269,3 +269,7 @@ com.google.cloud.datastore.core.exception.DatastoreException: No matching allow 
 
 Nov 21, 2026 12:50:07 PM io.gapi.emulators.netty.HttpHandler$1 onError
 INFO: Exception when handling request: PERMISSION_DENIED: No matching allow statements
+Nov 21, 2026 12:50:56 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+Nov 21, 2026 12:51:27 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
