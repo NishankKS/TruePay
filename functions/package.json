@@ -1,0 +1,14 @@
+{
+  "name": "iw-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": { "node": "22" },
+  "scripts": { "build": "tsc" },
+  "dependencies": {
+    "@genkit-ai/google-genai": "^1.44.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^7.4.0",
+    "genkit": "^1.44.0"
+  },
+  "devDependencies": { "typescript": "^5.6.0" }
+}

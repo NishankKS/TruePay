@@ -1,0 +1,11 @@
+.env
+sa.json
+*.json.key
+.venv
+.git
+app
+functions
+docs
+tests
+backend/fixtures/out
+**/__pycache__

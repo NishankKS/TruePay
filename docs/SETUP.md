@@ -105,3 +105,20 @@ cd app && flutter run -d chrome --dart-define=EMULATOR=true   # Mission Control;
 ```
 
 Act 4 and Act 0 also run fully on the emulator (no Gemini needed). Acts 1–3 and 5 need `GOOGLE_API_KEY` and the Sheet.
+
+## Optional (Should) extras
+
+**Genkit AI summary on the audit report.** Needs the Blaze plan. Run `make functions`; it asks for the Gemini key once and
+stores it as a function secret. The report shows the summary when the function answers and hides it otherwise.
+
+**Müller's vendor agent on Cloud Run.** Run `make vendor-cloudrun`. It deploys `Dockerfile` (vendor agent only, no secrets
+in the image), sets `PUBLIC_URL`, and prints the URL. Put that URL in the Sheet's `vendors.a2a_url` and restart the runner.
+
+**AppSheet finance console** (no code, about 5 minutes):
+1. <https://www.appsheet.com/>: **Create**, then **App**, then **Start with existing data**, then pick the "IBAN-Wächter Master" Sheet.
+2. Tables `vendors` (editable: `iban`, `a2a_url`, `status`), `purchase_orders` (read-only), `audit_ledger` (read-only).
+3. Use a deck view on `audit_ledger` sorted by `ts` descending, and a form view on `vendors`.
+4. This is the **only** place a person changes bank details. Agents have no tool for it.
+
+**Android build.** Needs the Android SDK and `google-services.json` from the Firebase console (Project settings, Android app
+`com.example.iban_waechter`). Then: `cd app && flutter build apk`.

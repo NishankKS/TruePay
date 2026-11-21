@@ -2,7 +2,20 @@ PY ?= .venv/bin/python
 # Tools installed in user space by the setup (docs/SETUP.md step 1)
 export PATH := $(HOME)/tools/flutter/bin:$(HOME)/tools/google-cloud-sdk/bin:$(HOME)/tools/tmuxenv/bin:$(PATH)
 
-.PHONY: fixtures seed up test reset web check-env install emu sim sim-reset
+.PHONY: fixtures seed up test reset web check-env install emu sim sim-reset functions vendor-cloudrun
+
+# Should: Genkit auditSummary (needs Blaze plan + Gemini key as a function secret)
+# Should: Müller's vendor agent on Cloud Run. Afterwards put the printed URL into the Sheet (vendors.a2a_url).
+vendor-cloudrun:
+	gcloud run deploy mueller-agent --source . --region europe-west3 --allow-unauthenticated \
+	  --set-env-vars "GOOGLE_API_KEY=$$(sed -n 's/^GOOGLE_API_KEY=//p' .env),WORKER_MODEL=$$(sed -n 's/^WORKER_MODEL=//p' .env)"
+	URL=$$(gcloud run services describe mueller-agent --region europe-west3 --format='value(status.url)') && \
+	  gcloud run services update mueller-agent --region europe-west3 --update-env-vars PUBLIC_URL=$$URL && \
+	  echo "vendor agent: $$URL  -> set vendors.a2a_url in the Sheet"
+
+functions:
+	firebase functions:secrets:set GEMINI_API_KEY
+	firebase deploy --only functions
 
 # Keyless rehearsal: emulators + real paygate + scripted agents + UI on http://localhost:5000 (docs/SETUP.md)
 sim:
