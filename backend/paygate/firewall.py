@@ -40,7 +40,7 @@ class Gate:
     def __init__(self, policy, store, tokens: dict, approval_secret: str = "", approver_uid: str = ""):
         self.policy, self.store, self.tokens = policy, store, tokens
         self.approval_secret, self.approver_uid = approval_secret, approver_uid
-        self.unauthorized = Counter()  # (run_id, identity) -> count. ponytail: in-memory, fine for one process
+        self.unauthorized = Counter()  # ((session, run_id), identity) -> count. ponytail: in-memory, fine for one process
 
     # ------------------------------------------------------------------ entry point
     def call(self, token: str | None, tool: str, args: dict) -> dict:
@@ -54,7 +54,7 @@ class Gate:
                 raise Deny("IDENTITY_REVOKED")
             # F1
             if not identity or tool not in self.policy.identities.get(identity, []):
-                self._unauthorized(run_id, identity)
+                self._unauthorized((str(rt.get("session_started_at")), run_id), identity)
                 raise Deny("UNAUTHORIZED_TOOL")
             # F2
             a = self._validate(tool, args)
@@ -77,11 +77,13 @@ class Gate:
                 pass
             return error("UPSTREAM_UNAVAILABLE")
 
-    def _unauthorized(self, run_id, identity):
+    def _unauthorized(self, key, identity):
+        """key = (session_started_at, run_id): make reset restarts run ids, so the session is part of the key."""
         if not identity:
             return
-        self.unauthorized[(run_id, identity)] += 1
-        if self.unauthorized[(run_id, identity)] >= self.policy.revoke_after_unauthorized:
+        run_id = key[1]
+        self.unauthorized[(key, identity)] += 1
+        if self.unauthorized[(key, identity)] >= self.policy.revoke_after_unauthorized:
             self.store.revoke(identity)
             emit(run_id, "firewall", "ALERT", "BLOCK", f"Identity revoked: {identity}",
                  f"{self.policy.revoke_after_unauthorized} unauthorized tool calls", layer="L5",
@@ -159,9 +161,9 @@ class Gate:
              invoice_id=inv["invoice_id"], layer="L5", tool="place_hold", amount_cents=inv["amount_cents"])
 
     def rule_activation(self, req_iban: str, req_cents: int, inv: dict, exclude_approval=None) -> dict:
-        vendor = next((v for v in self.store.vendors() if v["vendor_id"] == inv.get("vendor_id")), None) or {}
+        vendor = self._invoice_vendor(inv) or {}
         po = self.store.po(inv.get("po_number") or "") or {}
-        po_ok = po.get("vendor_id") == inv.get("vendor_id") and po.get("status") == "open"
+        po_ok = bool(vendor) and po.get("vendor_id") == vendor.get("vendor_id") and po.get("status") == "open"
         return {
             "iban_checksum_ok": ib.checksum_ok(req_iban),
             "already_paid_or_pending": self.store.already_paid_or_pending(inv["invoice_no"], exclude_approval),
@@ -173,10 +175,14 @@ class Gate:
             "limit_cents": self.policy.payment_limit_cents,
         }
 
+    def _invoice_vendor(self, inv: dict) -> dict | None:
+        """The one vendor-master row whose name matches the invoice's vendor_name (C1), else None."""
+        hits = [v for v in self.store.vendors() if _fold(v["name"]) == _fold(inv.get("vendor_name") or "")]
+        return hits[0] if len(hits) == 1 else None
+
     def checks(self, inv: dict) -> list[dict]:
         """C1–C6 (PRD §6)."""
-        hits = [v for v in self.store.vendors() if _fold(v["name"]) == _fold(inv.get("vendor_name", ""))]
-        vendor = hits[0] if len(hits) == 1 else None
+        vendor = self._invoice_vendor(inv)
         po = self.store.po(inv.get("po_number") or "")
         i = ib.normalize(inv.get("iban", ""))
         master = ib.normalize(vendor["iban"]) if vendor else ""
@@ -211,8 +217,9 @@ class Gate:
         if inv["status"] in ("SCREENED", "VERIFIED", "FLAGGED"):
             checks = self.checks(inv)
             status = "VERIFIED" if all(c["pass"] for c in checks) else "FLAGGED"
-            self.store.update_invoice(inv["invoice_id"], checks=checks, status=status)
-            inv.update(checks=checks, status=status)
+            vendor_id = (self._invoice_vendor(inv) or {}).get("vendor_id")
+            self.store.update_invoice(inv["invoice_id"], checks=checks, status=status, vendor_id=vendor_id)
+            inv.update(checks=checks, status=status, vendor_id=vendor_id)
             failed = [c["check"] for c in checks if not c["pass"]]
             emit(run_id, "firewall", "CHECK", "PASS" if not failed else "BLOCK",
                  f"Checks: {status}" + (f" ({', '.join(failed)})" if failed else ""),
