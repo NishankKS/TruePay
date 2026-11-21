@@ -1,6 +1,7 @@
 """L3: Sentinel — one quarantined model call, no tools, strict JSON InvoiceFields (PRD §5). Temperature 0."""
 import json
 import re
+import time
 
 from backend.common import config
 from backend.intake.schema import InvoiceFields
@@ -35,11 +36,31 @@ def _call_api(text: str) -> str:
     return r.text
 
 
-def extract(text: str) -> InvoiceFields:
+# L3 quarantines only flags aimed at the agent (AI/system, skip approval/verification, speed/secrecy). A plain
+# bank-change notice ("neue Bankverbindung") is recorded but left to C3 + the vendor callback (PRD Act 3).
+AGENT_DIRECTED = re.compile(
+    r"\b(AI|KI|assistant|assistent|system|agent|model|ignore|ignorier|instruction|anweisung|approv|pre-?approved|"
+    r"genehmig|verif|pr[üu]f|do not|don't|nicht kontakt|immediately|sofort|urgent|dringend|secret|geheim|"
+    r"confidential|vertraulich|execute|ausf[üu]hren)", re.I)
+
+
+def blocking(flags: list[str]) -> list[str]:
+    return [f for f in flags if AGENT_DIRECTED.search(f)]
+
+
+def extract(text: str, attempts: int = 3) -> InvoiceFields:
     """Raises on model failure or schema violation; the pipeline turns that into QUARANTINED / PARSE_FAILED."""
     if config.SIM:
         from backend import sim
         return sim.extract(text)
-    raw = (_call_api if config.SENTINEL_BACKEND == "api" else _call_ollama)(text)
+    call = _call_api if config.SENTINEL_BACKEND == "api" else _call_ollama
+    for i in range(attempts):  # 503/504/429 spikes are common at events; still fails closed after the last try
+        try:
+            raw = call(text)
+            break
+        except Exception as e:
+            if i == attempts - 1 or getattr(e, "code", 500) not in (429, 500, 503, 504):
+                raise
+            time.sleep(1.5 * (i + 1))
     raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
     return InvoiceFields.model_validate_json(raw)

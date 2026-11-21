@@ -80,10 +80,11 @@ def run_intake(run_id: str, run_seq: int, fixture: str, pdf_path, layers: dict, 
             doc.update(vendor_name=f.vendor_name, invoice_no=f.invoice_no, invoice_date=f.invoice_date.isoformat(),
                        po_number=f.po_number, amount_cents=f.amount_cents, iban=f.iban,
                        suspicious_instructions=f.suspicious_instructions)
-            if f.suspicious_instructions:
+            agent_directed = sentinel.blocking(f.suspicious_instructions)
+            if agent_directed:
                 blocks.append("L3")
-                ev("sentinel", "CHECK", "BLOCK", f"Sentinel flagged {len(f.suspicious_instructions)} instruction(s)",
-                   f"Withheld from agents: {f.suspicious_instructions[0]}", layer="L3")
+                ev("sentinel", "CHECK", "BLOCK", f"Sentinel flagged {len(agent_directed)} instruction(s)",
+                   f"Withheld from agents: {agent_directed[0]}", layer="L3")
             else:
                 ev("sentinel", "CHECK", "PASS", "Sentinel: fields extracted",
                    f"{f.invoice_no} · {eur_display(f.amount_cents)} · {mask(f.iban)}", layer="L3")
