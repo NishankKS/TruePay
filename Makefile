@@ -21,7 +21,7 @@ seed:
 	$(PY) -m backend.scripts.seed
 
 # Panes stay open on exit so a crash stays readable. Stage: runner (agents) on top, paygate below.
-KEEP = ; echo; echo "[exited - press enter]"; read _
+KEEP = ; echo; echo '[exited - press enter]'; read _
 up:
 	tmux kill-session -t iw 2>/dev/null || true
 	tmux new-session -d -s iw -x 200 -y 50 "$(PY) -m backend.agents.runner $(KEEP)" \; \
