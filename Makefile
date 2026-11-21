@@ -2,7 +2,11 @@ PY ?= .venv/bin/python
 # Tools installed in user space by the setup (docs/SETUP.md step 1)
 export PATH := $(HOME)/tools/flutter/bin:$(HOME)/tools/google-cloud-sdk/bin:$(HOME)/tools/tmuxenv/bin:$(PATH)
 
-.PHONY: fixtures seed up test reset web check-env install
+.PHONY: fixtures seed up test reset web check-env install emu
+
+# Local dev without any keys: Firestore + Auth emulators (project demo-iw) with the real security rules.
+emu:
+	firebase emulators:start --only firestore,auth --project demo-iw
 
 install:
 	python3 -m venv .venv && $(PY) -m pip install -q -r requirements.txt
@@ -16,12 +20,15 @@ fixtures:
 seed:
 	$(PY) -m backend.scripts.seed
 
+# Panes stay open on exit so a crash stays readable. Stage: runner (agents) on top, paygate below.
+KEEP = ; echo; echo "[exited - press enter]"; read _
 up:
-	tmux new-session -d -s iw "ollama serve" \; \
-	  split-window -v "$(PY) -m backend.paygate.server" \; \
-	  split-window -v "$(PY) -m uvicorn backend.vendor_agent.a2a_app:app --port 8002" \; \
-	  split-window -v "$(PY) -m backend.agents.runner" \; \
-	  select-layout even-vertical \; attach
+	tmux kill-session -t iw 2>/dev/null || true
+	tmux new-session -d -s iw -x 200 -y 50 "$(PY) -m backend.agents.runner $(KEEP)" \; \
+	  split-window -v "$(PY) -m backend.paygate.server $(KEEP)" \; \
+	  split-window -h "$(PY) -m uvicorn backend.vendor_agent.a2a_app:app --port 8002 $(KEEP)" \; \
+	  split-window -h "(curl -sf localhost:11434 >/dev/null && echo 'ollama already running' || ollama serve) $(KEEP)" \; \
+	  select-pane -t 0 \; attach
 
 test:
 	$(PY) -m pytest tests/ -q

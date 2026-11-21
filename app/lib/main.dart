@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -8,11 +9,13 @@ import 'screens/report.dart';
 import 'widgets/theme.dart';
 
 // Firebase web config via --dart-define-from-file=firebase.web.json (see Makefile `web`).
+// Local dev without keys: --dart-define=EMULATOR=true (Firestore :8085, Auth :9099, project demo-iw).
+const _emulator = bool.fromEnvironment('EMULATOR');
 const _opts = FirebaseOptions(
-  apiKey: String.fromEnvironment('apiKey'),
-  appId: String.fromEnvironment('appId'),
-  messagingSenderId: String.fromEnvironment('messagingSenderId'),
-  projectId: String.fromEnvironment('projectId'),
+  apiKey: String.fromEnvironment('apiKey', defaultValue: 'demo-key'),
+  appId: String.fromEnvironment('appId', defaultValue: '1:0:web:0'),
+  messagingSenderId: String.fromEnvironment('messagingSenderId', defaultValue: '0'),
+  projectId: String.fromEnvironment('projectId', defaultValue: 'demo-iw'),
   authDomain: String.fromEnvironment('authDomain'),
   storageBucket: String.fromEnvironment('storageBucket'),
 );
@@ -20,6 +23,10 @@ const _opts = FirebaseOptions(
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: _opts);
+  if (_emulator) {
+    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8085);
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  }
   runApp(const App());
 }
 
