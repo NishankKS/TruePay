@@ -43,7 +43,7 @@ controller. The firewall still holds.
 
 Firewall rules F0 identity revoked · F1 tool allowlist · F2 argument validation · F3 IBAN mismatch · F4 amount mismatch ·
 F5 duplicate · F6 not verified · F7 approval token. Dangerous tools (change bank details, execute payment) are
-**not built at all**, so Act 4 shows `NO_SUCH_TOOL`. Agent UX: all eight checklist points (see README).
+**not built at all**, so Act 4 shows `NO_SUCH_TOOL`.
 
 ## Challenges
 

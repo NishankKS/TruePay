@@ -72,9 +72,7 @@ do is *ask*, and the firewall answers `IBAN_MISMATCH`.
 
 ## 🏗️ Architecture
 
-![TruePay architecture: intake, controller, investigator and vendor agent behind the paygate firewall, with phone approval and a Firestore event bus](docs/architecture.png)
-
-*(Source: [`docs/architecture.html`](docs/architecture.html).)*
+![TruePay architecture: intake, controller, investigator and vendor agent behind the paygate firewall, with phone approval and a Firestore event bus](docs/architecture.svg)
 
 ```text
  Flutter web (Mission Control / Approver / Report)  ──reads──►  Firestore (events, invoices, approvals, stats)
@@ -106,19 +104,6 @@ strikes, then revoked) · F2 argument validation · F3 `IBAN_MISMATCH` · F4
 `AMOUNT_MISMATCH` · F5 `DUPLICATE` · F6 `INVOICE_NOT_VERIFIED` · F7
 `APPROVAL_REQUIRED`. Rules F3–F6 are CEL expressions in
 [`policy/paygate.yaml`](policy/paygate.yaml).
-
-## 🧰 Agent UX checklist
-
-| # | Checklist point | How TruePay meets it |
-| :-- | :-- | :-- |
-| 1 | Shape tools around tasks, not endpoints | Six business tasks: get, verify, history, hold, alert, request payment |
-| 2 | Accept names, return only needed fields, say what was cut | Invoice numbers and vendor names are accepted. Results hold fields only. History reports `shown` and `total`. |
-| 3 | Put multi-step logic in the server | Checks C1–C6 run in one call. Approval, signing, re-checks and the payment write all run inside `paygate`. |
-| 4 | Validate before the handler; give every error a closed type | F0–F2 run in middleware before any handler. Every error carries one of eleven codes. |
-| 5 | Warn that results may be incomplete, never whether something is hidden | The same notice on every invoice result, whether or not anything was removed |
-| 6 | Leave dangerous tools out instead of forbidding them | No tool changes bank details or executes payments; Act 4 shows `NO_SUCH_TOOL` |
-| 7 | Keep policy and credentials out of the agent's reach | Rules and keys live only in `paygate`. Agents carry an identity token in a header the model never sees. |
-| 8 | Test with a matrix of models and clients, and ask them | [`docs/agent-ux.md`](docs/agent-ux.md) |
 
 ## 🧱 Technology stack
 

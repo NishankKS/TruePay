@@ -16,14 +16,14 @@ TruePay is a zero-trust accounts-payable agent crew for German SMBs: even if the
 | :---- | :---- |
 | Agentic Capability & Innovation (40%) | The Controller decides PAY, HOLD or INVESTIGATE. The Investigator gathers evidence and asks the vendor's own agent over A2A. A quarantined Gemma reader feeds them structured fields only. |
 | Security & Trust (30%) | Six defense layers. Payment rules in CEL inside a firewall with no off switch. One identity per agent with auto-revoke. Dangerous tools not built at all. Signed single-use approvals. Full audit trail. |
-| Scalability & Technical Execution (30%) | Same-invoice before/after demo on a split screen. Firewall unit tests. Agent UX checklist met and tested across models and clients. One-command setup and reset. |
+| Scalability & Technical Execution (30%) | Same-invoice before/after demo on a split screen. Firewall unit tests. One-command setup and reset. |
 
 &nbsp;
 
 | Judge | What they will look for | Where we show it |
 | :---- | :---- | :---- |
 | Haydar Genc (Google, cloud security) | Policy as code, least privilege, audit | CEL rules in `policy/paygate.yaml`, identity revocation in Act 4, the audit report |
-| Randy Gupta (GDE, MCP design) | Tools designed for models, a small action space | Section 7: all eight Agent UX points, plus the test matrix in the README |
+| Randy Gupta (GDE, MCP design) | Tools designed for models, a small action space | Six task-shaped tools; none changes bank details or executes payments (section 6) |
 | Vera Berlemann (Google for Startups), Ali Mangan (REACH) | A real customer and a business | The Act 0 vs Act 3 before/after, section 15 |
 | Denys Doroshev (Proofa), Nikhil Jha (GDG Paderborn), Ines Zenkri | A product that works and a clear architecture | Live split-screen demo, architecture diagram, clean repo |
 
@@ -44,11 +44,10 @@ The build is done when acceptance tests A0–A7 pass three times in a row, with 
 | A6 | Audit report | One printable page listing every ALLOW and DENY of the session |
 | A7 | Firewall tests | `make test` passes, with at least one passing and one failing case per rule F0–F7 |
 
-**Must (feature freeze 14:15):** everything for A0–A7, the reset script, the README with the Agent UX section, and the Devpost entry.
+**Must (feature freeze 14:15):** everything for A0–A7, the reset script, the README, and the Devpost entry.
 
 **Should (only when the owner's Must work is green; never after 14:15), in this order:**
 
-1. Agent UX test matrix: 2 models × 2 clients (section 7).  
 2. Genkit AI summary on the audit report.  
 3. Vendor agent hosted on Cloud Run instead of localhost.  
 4. AppSheet finance console.  
@@ -261,28 +260,9 @@ Python computes `iban_checksum_ok` (mod-97) and `already_paid_or_pending`, then 
 
 **Audit.** Every firewall decision writes one event (actor `firewall`, layer L5) and one row in the Sheets `audit_ledger`. IBANs in events and logs are masked to the first 4 and last 4 characters, e.g. `DE39…5678`.
 
-## 7\. Agent UX checklist
+## 7\. (removed)
 
-TruePay meets all eight points of the Agent UX checklist presented at DevFest Münster. The README repeats this table, and the test matrix shows the evidence.
-
-| \# | Checklist point | How TruePay meets it |
-| :---- | :---- | :---- |
-| 1 | Shape tools around tasks, not endpoints | Six business tasks: get, verify, history, hold, alert, request payment |
-| 2 | Accept names, return only needed fields, say what was cut | Invoice numbers and vendor names are accepted. Results hold fields only, with IBANs masked. History reports `shown` and `total`. |
-| 3 | Put multi-step logic in the server | Checks C1–C6 run in one call. Approval, signing, re-checks and the payment write all run inside `paygate`. |
-| 4 | Validate before the handler; give every error a closed type | F0–F2 run before any handler. Every error carries one of eleven codes. |
-| 5 | Warn that results may be incomplete, never whether something is hidden | The same notice on every invoice result, whether or not anything was removed |
-| 6 | Leave dangerous tools out instead of forbidding them | No tool changes bank details or executes payments; Act 4 shows NO\_SUCH\_TOOL |
-| 7 | Keep policy and credentials out of the agent's reach | Rules and keys live only in `paygate`. Agents carry an identity token in a header the model never sees. |
-| 8 | Test with a matrix of models and clients, and ask them | See the test matrix below |
-
-**Test matrix (Should, owner D, about 20 minutes after G2)**
-
-- Models: `CONTROLLER_MODEL` and `WORKER_MODEL`, each placed in the Controller seat.  
-- Clients: our ADK runner, and Antigravity connected to `paygate` as an MCP server. If Antigravity takes more than 10 minutes to connect, use MCP Inspector as the second client.  
-- Runs: Acts 1, 2 and 3 in each of the four cells. Record pass or fail per act.  
-- Ask: after each run, ask the model "Which tool description or result confused you, and what would you change?"  
-- Output: the 2×2 table, the answers, and any description changes in `docs/agent-ux.md`, linked from the README.
+The Agent UX checklist and test matrix were dropped. Section numbers are kept so §-references elsewhere stay valid.
 
 ## 8\. Data model, event contract and security rules
 
@@ -481,7 +461,7 @@ One public monorepo. Six Make targets run everything, and `make reset` returns t
 
 ```
 truepay/
-├── README.md            problem, before/after, architecture image, threat model, Agent UX table, setup, demo steps
+├── README.md            problem, before/after, architecture image, threat model, setup, demo steps
 ├── AGENTS.md            rules for Antigravity agents: the contracts in this PRD are frozen
 ├── .env.example
 ├── Makefile             fixtures, seed, up, test, reset, web
@@ -498,7 +478,7 @@ truepay/
 │   ├── fixtures/        make_invoices.py, out/ (PDFs and PNGs)
 │   └── scripts/         seed.py, reset.py, fake_run.py
 ├── tests/               test_firewall.py (F0–F7), test_iban.py
-├── docs/                agent-ux.md (test matrix), architecture.png
+├── docs/                architecture.svg
 ├── app/                 Flutter: lib/main.dart, lib/screens/{mission_control,approver,report}.dart, lib/widgets/, assets/invoices/
 └── functions/           Genkit auditSummary (TypeScript)
 ```
@@ -620,7 +600,6 @@ Stage order is 0, 3, 1, 2, 4, 5: the same invoice first without and then with Tr
 | Why run Gemma on your own machine? | Untrusted text is read by a model with no tools and no credentials that can only output a fixed schema, and the invoice data stays local. |
 | What about false positives? | A hold only asks a person to look. Clean invoices pass in seconds, as in Act 1\. |
 | How does it scale? | Stateless agents and firewall on Cloud Run, Firestore for state, one policy file per company, and managed agents on Agent Runtime later. |
-| How do you know agents use your tools correctly? | We meet the eight-point Agent UX checklist and tested 2 models × 2 clients, asking each model what confused it (`docs/agent-ux.md`). |
 
 ## 14\. Risks and fallbacks
 
@@ -672,7 +651,7 @@ The project ships when these boxes are ticked: a complete draft on Devpost at 14
 - [ ] A fresh clone runs with `make fixtures seed up web`, following the README  
 - [ ] No secrets in the repo: `.env` and `sa.json` git-ignored, secret scan run  
 - [ ] Backup video of all six acts in stage order  
-- [ ] README contains the problem, the before/after, the architecture image, the L1–L6 threat-model table, the Agent UX table, setup in 10 commands or fewer, demo steps, and known limits (mock bank, one vendor, signer and executor in one process)  
+- [ ] README contains the problem, the before/after, the architecture image, the L1–L6 threat-model table, setup in 10 commands or fewer, demo steps, and known limits (mock bank, one vendor, signer and executor in one process)  
 - [ ] Judge Q\&A rehearsed out loud once
 
 **Devpost submission**
@@ -681,7 +660,7 @@ The project ships when these boxes are ticked: a complete draft on Devpost at 14
 - [ ] Pitch: "photoTAN proves who pays. TruePay proves who gets paid. AI agents read invoices, verify vendors and prepare payments behind a policy-as-code firewall, so even a fully fooled AI cannot move the money."  
 - [ ] Problem: bank-detail fraud that passes photoTAN and Verification of Payee, and AI agents as a new attack surface  
 - [ ] Architecture and agent logic: the diagram from section 4 and the agent table from section 5  
-- [ ] Guardrails: layers L1–L6, rules F0–F7, and the Agent UX table from section 7  
+- [ ] Guardrails: layers L1–L6, rules F0–F7  
 - [ ] Public repo link with setup instructions  
 - [ ] Live demo readiness: "Yes: live terminal, Mission Control and phone approval"  
 - [ ] Technology tags for what was actually built. Drop the tag of any Should item that did not make it.  
