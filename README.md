@@ -74,20 +74,6 @@ do is *ask*, and the firewall answers `IBAN_MISMATCH`.
 
 ![TruePay architecture: intake, controller, investigator and vendor agent behind the paygate firewall, with phone approval and a Firestore event bus](docs/architecture.svg)
 
-```text
- Flutter web (Mission Control / Approver / Report)  ──reads──►  Firestore (events, invoices, approvals, stats)
-          │ writes commands + switches                                    ▲
-          ▼                                                               │ emit()
-  agents (ADK) ─────────────────────────────────────────────────────────────┤
-   ├─ Intake: L1 hidden text → L2 Model Armor → L3 Gemma Sentinel (strict JSON, no tools)
-   ├─ Controller (Gemini) ──MCP + bearer token──►  paygate (FastMCP, :8001/mcp)  ── L5 Action Firewall
-   └─ Investigator (Gemini) ──A2A──► vendor-agent (Müller's own agent, :8002)  L4      │  CEL rules from
-                                                                                     │  policy/paygate.yaml
-                                     phone approval (Firestore rules) ─► L6 ─► HMAC token ─► internal execute
-                                                                                     ▼
-                                                     Google Sheets: vendor master, POs, audit ledger
-```
-
 ## 🔒 Threat model: six defense layers
 
 | Layer | Defense | Stops | Fails |

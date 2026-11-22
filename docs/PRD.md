@@ -1,6 +1,6 @@
 # TruePay — PRD (DevFest Münster 2026\)
 
-Nov 21, 2026 · @Terril
+Nov 21, 2026
 
 ## 1\. Summary
 
