@@ -83,7 +83,7 @@ class _LiveDocState extends State<LiveDoc> {
       );
 }
 
-// ---------------------------------------------------------------- iBanned approval card
+// ---------------------------------------------------------------- TruePay approval card
 class ApprovalCard extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> doc;
   final bool readOnly;
@@ -189,7 +189,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
   }
 }
 
-// ---------------------------------------------------------------- Act 0: a generic bank app, NOT iBanned
+// ---------------------------------------------------------------- Act 0: a generic bank app, NOT TruePay
 class BankCard extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> doc;
   final bool readOnly;

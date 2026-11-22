@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../scenarios.dart';
@@ -265,7 +264,7 @@ class _SidebarState extends State<Sidebar> {
             ),
             const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('iBanned', style: sans(size: 19, w: FontWeight.w600)),
+              Text('TruePay', style: sans(size: 19, w: FontWeight.w600)),
               Text('No fake IBAN gets paid', style: sans(size: 12.5, c: cMuted)),
             ]),
           ]),
@@ -381,7 +380,7 @@ class KpiRow extends StatelessWidget {
                 child: Row(children: [
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text('Blocked by iBanned', style: sans(size: 13, c: Colors.white70, w: FontWeight.w500)),
+                      Text('Blocked by TruePay', style: sans(size: 13, c: Colors.white70, w: FontWeight.w500)),
                       _counter(d['blocked_cents'], kpi(Colors.white).copyWith(fontSize: 32)),
                     ]),
                   ),
@@ -394,7 +393,7 @@ class KpiRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 14),
-            _tile(Icons.trending_down_rounded, 'Lost without iBanned', d['lost_cents'], cBlock, cBlockTint),
+            _tile(Icons.trending_down_rounded, 'Lost without TruePay', d['lost_cents'], cBlock, cBlockTint),
             const SizedBox(width: 14),
             _tile(Icons.payments_rounded, 'Paid', d['paid_cents'], cInk, cPassTint),
             const SizedBox(width: 14),
@@ -1024,7 +1023,6 @@ class LayerRail extends StatelessWidget {
 
   Widget _layerRow(String l, Map<String, dynamic>? ev) {
     final v = ev?['verdict'] as String?;
-    final locked = l == 'L5' || l == 'L6';
     final disabled = layerSwitch.containsKey(l) && layers[layerSwitch[l]] == false && act != '0';
     final (state, c, tint) = act == '0'
         ? ('NOT INSTALLED', cIdle, cIdleTint)

@@ -126,7 +126,7 @@ def set_status(ref, status: str) -> bool:
 
 def main():
     if config.SIM:
-        print("runner: SIMULATION MODE (IW_SIM=1): scripted agents, no Gemini / Model Armor / Sheets")
+        print("runner: SIMULATION MODE (TP_SIM=1): scripted agents, no Gemini / Model Armor / Sheets")
     elif not config.GOOGLE_API_KEY:
         print("runner: WARNING GOOGLE_API_KEY is empty in .env; agent runs will fail (see docs/SETUP.md step 4)")
     a2a_url = vendor_a2a_url()

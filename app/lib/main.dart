@@ -10,13 +10,13 @@ import 'screens/report.dart';
 import 'widgets/theme.dart';
 
 // Firebase web config via --dart-define-from-file=firebase.web.json (see Makefile `web`).
-// Local dev without keys: --dart-define=EMULATOR=true (Firestore :8085, Auth :9099, project demo-iw).
+// Local dev without keys: --dart-define=EMULATOR=true (Firestore :8085, Auth :9099, project demo-truepay).
 const _emulator = bool.fromEnvironment('EMULATOR');
 const _opts = FirebaseOptions(
   apiKey: String.fromEnvironment('apiKey', defaultValue: 'demo-key'),
   appId: String.fromEnvironment('appId', defaultValue: '1:0:web:0'),
   messagingSenderId: String.fromEnvironment('messagingSenderId', defaultValue: '0'),
-  projectId: String.fromEnvironment('projectId', defaultValue: 'demo-iw'),
+  projectId: String.fromEnvironment('projectId', defaultValue: 'demo-truepay'),
   authDomain: String.fromEnvironment('authDomain'),
   storageBucket: String.fromEnvironment('storageBucket'),
 );
@@ -54,7 +54,7 @@ class App extends StatelessWidget {
   const App({super.key, this.error});
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'iBanned',
+        title: 'TruePay',
         debugShowCheckedModeBanner: false,
         theme: appTheme(),
         onGenerateRoute: (s) => MaterialPageRoute(

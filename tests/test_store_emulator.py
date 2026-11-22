@@ -1,7 +1,7 @@
 """FirestoreStore against the Firestore emulator (Sheets parts faked). Skipped unless FIRESTORE_EMULATOR_HOST is set.
 
-  npx firebase-tools emulators:start --only firestore --project demo-iw
-  FIRESTORE_EMULATOR_HOST=localhost:8080 GCP_PROJECT=demo-iw pytest tests/test_store_emulator.py
+  npx firebase-tools emulators:start --only firestore --project demo-truepay
+  FIRESTORE_EMULATOR_HOST=localhost:8080 GCP_PROJECT=demo-truepay pytest tests/test_store_emulator.py
 """
 import os
 

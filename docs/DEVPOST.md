@@ -1,8 +1,8 @@
 # Devpost submission (copy-paste)
 
-**Name:** iBanned, the zero-trust AI accounts-payable crew
+**Name:** TruePay, the zero-trust AI accounts-payable crew
 
-**Tagline / pitch:** photoTAN proves who pays. iBanned proves who gets paid. AI agents read invoices, verify
+**Tagline / pitch:** photoTAN proves who pays. TruePay proves who gets paid. AI agents read invoices, verify
 vendors and prepare payments behind a policy-as-code firewall, so even a fully fooled AI cannot move the money.
 
 ## Inspiration / problem
@@ -16,7 +16,7 @@ becomes an instruction.
 ## What it does
 
 The same fraudulent invoice, twice. Today's automation loses €18,950 after a valid TAN confirmation, and
-iBanned holds it before a payment even exists. Then three live attacks: a poisoned invoice with invisible
+TruePay holds it before a payment even exists. Then three live attacks: a poisoned invoice with invisible
 instructions, a compromised insider component, and finally the AI defenses switched off with a jailbroken
 controller. The firewall still holds.
 

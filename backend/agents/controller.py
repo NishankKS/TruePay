@@ -30,9 +30,9 @@ async def run(invoice_no: str, *, a2a_url: str | None, raw_text: str | None = No
     msg = f"Invoice number: {invoice_no}"
     if raw_text and not jailbroken:
         msg += f"\n\nInvoice text (L3 quarantine is off):\n{raw_text}"
-    runner = InMemoryRunner(agent=agent, app_name="iban-waechter")
+    runner = InMemoryRunner(agent=agent, app_name="truepay")
     sid = uuid.uuid4().hex
-    await runner.session_service.create_session(app_name="iban-waechter", user_id="ap", session_id=sid)
+    await runner.session_service.create_session(app_name="truepay", user_id="ap", session_id=sid)
     final = ""
     try:
         async for ev in runner.run_async(user_id="ap", session_id=sid,

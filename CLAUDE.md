@@ -1,4 +1,4 @@
-# IBAN-Wächter — rules for every session
+# TruePay — rules for every session
 
 Build spec: `docs/PRD.md` (final, wins over the UI canvas). Read the relevant section before changing code.
 Hackathon clock (CET, 21 Nov 2026): Devpost draft 14:00, feature freeze 14:15, final submission 14:50.

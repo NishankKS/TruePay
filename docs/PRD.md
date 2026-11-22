@@ -1,16 +1,16 @@
-# IBAN-Wächter — PRD (DevFest Münster 2026\)
+# TruePay — PRD (DevFest Münster 2026\)
 
 Nov 21, 2026 · @Terril
 
 ## 1\. Summary
 
-IBAN-Wächter is a zero-trust accounts-payable agent crew for German SMBs: even if the AI is completely fooled, the money does not move. This is the final build spec; where it and the UI canvas differ, this doc wins.
+TruePay is a zero-trust accounts-payable agent crew for German SMBs: even if the AI is completely fooled, the money does not move. This is the final build spec; where it and the UI canvas differ, this doc wins.
 
 - **Problem.** Invoice fraud succeeds because every check passes: a real employee confirms the transfer with photoTAN. AI agents that read invoices add a new hole, because one hidden sentence in a PDF becomes an instruction.  
 - **Why bank checks are not enough.** photoTAN ties the TAN to the amount and IBAN, but cannot know whether that IBAN belongs to the vendor. Verification of Payee (since 9 October 2025\) checks the payee name at the bank, but companies can opt out for bulk transfers, a mismatch is only a warning, and a look-alike account name returns "close match". Both act at the last step, inside the bank.  
 - **Product.** Agents read invoices, verify vendors and prepare payments. Every side effect passes an Action Firewall with payment rules as code (CEL), one identity per agent and a signed human approval. It acts at the invoice, before a payment exists.  
-- **Demo.** The same fraudulent invoice twice: today's automation loses €18,950 after a TAN confirmation, and IBAN-Wächter holds it. Then three live attacks, and finally the AI defenses switched off while the firewall still holds.  
-- **Pitch line.** photoTAN proves who pays. IBAN-Wächter proves who gets paid.
+- **Demo.** The same fraudulent invoice twice: today's automation loses €18,950 after a TAN confirmation, and TruePay holds it. Then three live attacks, and finally the AI defenses switched off while the firewall still holds.  
+- **Pitch line.** photoTAN proves who pays. TruePay proves who gets paid.
 
 | Judging criterion | What earns the points |
 | :---- | :---- |
@@ -35,7 +35,7 @@ The build is done when acceptance tests A0–A7 pass three times in a row, with 
 
 | ID | Acceptance test | Pass condition |
 | :---- | :---- | :---- |
-| A0 | Today, without IBAN-Wächter | INV-1003 goes through the simulated invoice automation. The phone shows a bank confirmation with the name check "close match". After Confirm, "Lost without IBAN-Wächter" shows €18,950. |
+| A0 | Today, without TruePay | INV-1003 goes through the simulated invoice automation. The phone shows a bank confirmation with the name check "close match". After Confirm, "Lost without TruePay" shows €18,950. |
 | A1 | Clean invoice | Paid after one phone approval, under 60 s from the button press |
 | A2 | Poisoned invoice | Hidden text shown in red. Invoice QUARANTINED, then HOLD. No approval request. €0 moved. |
 | A3 | IBAN swap, the same invoice as A0 | The Investigator asks Müller's agent over A2A, which denies any bank change. HOLD. €0 moved. |
@@ -137,7 +137,7 @@ LLM agents never see credentials or policy. Their only route to a side effect is
 8. Inside `paygate`, the approval listener signs an HMAC token and calls the internal execute function. It checks F7 and re-runs F3–F5, then writes `payments/{id}`, sets the invoice to PAID and appends a ledger row. No agent can reach this function.  
 9. Every step writes one event to `events`. Mission Control and the terminal render only those events.
 
-**Act 0 flow (not part of the product).** `backend/baseline/automation.py` stands in for today's invoice automation. It takes the IBAN from the invoice's "Bankverbindung" line and the amount from its "Gesamtbetrag" line, writes `baseline_confirmations/{id}` as PENDING with the simulated name-check result, and waits. When the approver taps Confirm, it writes `baseline_transfers/{id}` and adds the amount to `stats/demo.lost_cents`. It never calls `paygate`, because it shows life without IBAN-Wächter.
+**Act 0 flow (not part of the product).** `backend/baseline/automation.py` stands in for today's invoice automation. It takes the IBAN from the invoice's "Bankverbindung" line and the amount from its "Gesamtbetrag" line, writes `baseline_confirmations/{id}` as PENDING with the simulated name-check result, and waits. When the approver taps Confirm, it writes `baseline_transfers/{id}` and adds the amount to `stats/demo.lost_cents`. It never calls `paygate`, because it shows life without TruePay.
 
 **Scaling.** Agents and `paygate` are stateless, so each runs as its own Cloud Run service. State lives in Firestore and Sheets, and the policy file is per company (section 15).
 
@@ -263,9 +263,9 @@ Python computes `iban_checksum_ok` (mod-97) and `already_paid_or_pending`, then 
 
 ## 7\. Agent UX checklist
 
-IBAN-Wächter meets all eight points of the Agent UX checklist presented at DevFest Münster. The README repeats this table, and the test matrix shows the evidence.
+TruePay meets all eight points of the Agent UX checklist presented at DevFest Münster. The README repeats this table, and the test matrix shows the evidence.
 
-| \# | Checklist point | How IBAN-Wächter meets it |
+| \# | Checklist point | How TruePay meets it |
 | :---- | :---- | :---- |
 | 1 | Shape tools around tasks, not endpoints | Six business tasks: get, verify, history, hold, alert, request payment |
 | 2 | Accept names, return only needed fields, say what was cut | Invoice numbers and vendor names are accepted. Results hold fields only, with IBANs masked. History reports `shown` and `total`. |
@@ -326,7 +326,7 @@ Firestore holds live state and the event bus. Google Sheets holds the business t
 
 Example: `{run_id: "run-0002", invoice_id: "INV-1002-02", actor: "intake", type: "CHECK", layer: "L1", verdict: "BLOCK", title: "Hidden text found (1 span)", detail: "White 1-pt text: SYSTEM NOTICE TO THE AI…"}`
 
-**Google Sheet "IBAN-Wächter Master"** (shared with the backend service account as Editor)
+**Google Sheet "TruePay Master"** (shared with the backend service account as Editor)
 
 | Tab | Columns | Seed rows |
 | :---- | :---- | :---- |
@@ -382,7 +382,7 @@ service cloud.firestore {
 
 Three screens in one Flutter web app plus a raw terminal. The UI only reads Firestore and writes two things: commands and toggles. The look is paper and ink: a cool light page, navy text, one colour per meaning, and a red rubber stamp on held invoices as the one bold element.
 
-The visual target is the [IBAN-Wächter UI canvas](https://claude.ai/artifact/7VZjCprtvuopP8ts76oj5P): Mission Control in its Act 2 state, the phone approver, the Act 0 bank confirmation and the audit report. Build to it.
+The visual target is the [TruePay UI canvas](https://claude.ai/artifact/7VZjCprtvuopP8ts76oj5P): Mission Control in its Act 2 state, the phone approver, the Act 0 bank confirmation and the audit report. Build to it.
 
 **Stage layout (projector at 1920×1080).** Terminal on the left third (640 px), Mission Control on the right two-thirds (1280 px, zoom 100%). The approver phone stays in the presenter's hand, and Mission Control mirrors whatever the phone shows, so the audience never needs to see the phone.
 
@@ -394,8 +394,8 @@ The visual target is the [IBAN-Wächter UI canvas](https://claude.ai/artifact/7V
 | Ink / muted ink | \#10213A / \#4E5D73 | Text / labels and second lines |
 | Hairline | \#D3DAE3, 1 px | Card borders and dividers |
 | Active | \#1F4FD1 | Running node, switches that are on, links |
-| Pass | \#0B7A55 on tint \#E7F5EF | PASS, ALLOW, "Blocked by IBAN-Wächter" counter |
-| Block | \#C21F3A on tint \#FCECEF | BLOCK, DENY, "Lost without IBAN-Wächter" counter, stamps, revealed hidden text |
+| Pass | \#0B7A55 on tint \#E7F5EF | PASS, ALLOW, "Blocked by TruePay" counter |
+| Block | \#C21F3A on tint \#FCECEF | BLOCK, DENY, "Lost without TruePay" counter, stamps, revealed hidden text |
 | Hold | \#A35200 on tint \#FFF4E5 | HOLD, the jailbreak switch when on |
 | Idle | \#6B7686 on \#F5F7FA | Not reached, standby, disabled or not-installed layers |
 | Type | IBM Plex Sans (UI), IBM Plex Mono (IBANs, codes, times), IBM Plex Sans Condensed 700 (stamps only), via `google_fonts` | KPI 30/600 with tabular figures, section titles 15/600 in sentence case, body 14, minimum 12.5 |
@@ -404,13 +404,13 @@ The visual target is the [IBAN-Wächter UI canvas](https://claude.ai/artifact/7V
 
 **Mission Control (`/`, 1280 × at least 900\)**
 
-1. **Header, 64 px.** Left: shield mark, "IBAN-Wächter", tagline "Agents decide. Code enforces. Humans approve." Right: four KPIs from `stats/demo`: "Lost without IBAN-Wächter" (block colour), "Blocked by IBAN-Wächter" (pass colour), "Paid" and "Denied actions" (ink).  
+1. **Header, 64 px.** Left: shield mark, "TruePay", tagline "Agents decide. Code enforces. Humans approve." Right: four KPIs from `stats/demo`: "Lost without TruePay" (block colour), "Blocked by TruePay" (pass colour), "Paid" and "Denied actions" (ink).  
 2. **Left rail, 280 px.**  
-   - Five scenario buttons, 56 px tall, each with a number, a title and a subtitle: 0 "Today, without IBAN-Wächter" / "Same IBAN swap, paid with a TAN"; 1 "Clean invoice" / "Müller, €4,280"; 2 "Poisoned invoice" / "Hidden instructions"; 3 "Silent IBAN swap" / "Checked by IBAN-Wächter"; 4 "Insider component" / "Compromised onboarding". Button 0 has a grey outline to set it apart from the product. All are disabled while a command is RUNNING.  
+   - Five scenario buttons, 56 px tall, each with a number, a title and a subtitle: 0 "Today, without TruePay" / "Same IBAN swap, paid with a TAN"; 1 "Clean invoice" / "Müller, €4,280"; 2 "Poisoned invoice" / "Hidden instructions"; 3 "Silent IBAN swap" / "Checked by TruePay"; 4 "Insider component" / "Compromised onboarding". Button 0 has a grey outline to set it apart from the product. All are disabled while a command is RUNNING.  
    - Judge mode: a 3-line text field and a "Run attack" button.  
    - Breach simulation: switches for L1 Hidden-text scan, L2 Model Armor and L3 Gemma quarantine (default on), and "Jailbreak controller" (default off).  
    - Two locked rows with a lock icon: "Action Firewall, always on" and "Human approval, always on".  
-3. **Centre, top: agent pipeline.** A scenario banner sits above the nodes with the current act's title and one line, e.g. "Act 3: the same invoice, now with IBAN-Wächter". In Act 0 it reads "Simulation of today's process. IBAN-Wächter is not involved and none of its data is touched." Below it, seven nodes left to right: Intake → Controller → Investigator → Müller agent (dashed, labelled A2A) → Firewall → Human → Bank.  
+3. **Centre, top: agent pipeline.** A scenario banner sits above the nodes with the current act's title and one line, e.g. "Act 3: the same invoice, now with TruePay". In Act 0 it reads "Simulation of today's process. TruePay is not involved and none of its data is touched." Below it, seven nodes left to right: Intake → Controller → Investigator → Müller agent (dashed, labelled A2A) → Firewall → Human → Bank.  
    - A node shows its latest event in the current run: INFO is active (pulse), PASS or ALLOW is green with a tick, BLOCK or DENY is red with a cross, no event is idle.  
    - Actor mapping: intake, sentinel and model\_armor → Intake; controller → Controller; investigator → Investigator; vendor\_agent → Müller agent; firewall → Firewall; human → Human; bank → Bank.  
    - Act 4: the Controller node is renamed "Onboarding" and shows onboarding events. Act 0: Intake is renamed "Invoice automation", Human and Bank light up, every other node reads "Not installed".  
@@ -427,7 +427,7 @@ The visual target is the [IBAN-Wächter UI canvas](https://claude.ai/artifact/7V
 
 - Top bar: "Approvals" and the signed-in email.  
 - Approval card (first approval with status PENDING): vendor, invoice and order, amount at 36/700, masked IBAN with "Matches vendor master", the six checks with ticks in two columns, a countdown. Buttons: Reject (outline) and "Approve €4,280" (green, twice as wide, 52 px tall). After a tap: "Approved, executing…", then "Paid".  
-- Bank confirmation card (Act 0, first `baseline_confirmations` entry with status PENDING): deliberately styled as a generic bank app, not as IBAN-Wächter. Grey header "Your bank", title "Confirm transfer", payee "Müller Bürobedarf GmbH", the full IBAN, the amount, a yellow line "Name check: close match, account holder 'Mueller Buerobedarf'", and a "Confirm with TAN" button (simulated, no real TAN). After the tap: "Transfer sent".  
+- Bank confirmation card (Act 0, first `baseline_confirmations` entry with status PENDING): deliberately styled as a generic bank app, not as TruePay. Grey header "Your bank", title "Confirm transfer", payee "Müller Bürobedarf GmbH", the full IBAN, the amount, a yellow line "Name check: close match, account holder 'Mueller Buerobedarf'", and a "Confirm with TAN" button (simulated, no real TAN). After the tap: "Transfer sent".  
 - Alerts feed: the latest 5 ALERT events as red cards with title, detail and time. Empty state: "All clear. No payments waiting."
 
 **Audit report (`/report`, A4 printable)**
@@ -452,7 +452,7 @@ The visual target is the [IBAN-Wächter UI canvas](https://claude.ai/artifact/7V
 
 Thirteen technologies do real work in the Must and Should build, three speed up the build, and three are stretch goals. Tag on Devpost only what was actually built, and say which tier each is in.
 
-| Technology | Role in IBAN-Wächter | Tier |
+| Technology | Role in TruePay | Tier |
 | :---- | :---- | :---- |
 | Gemini API (key from Google AI Studio) | Controller, Investigator and the vendor agent | Must |
 | Gemma 4 E4B on Ollama | Sentinel: the quarantined reader of untrusted invoice text | Must |
@@ -480,7 +480,7 @@ Thirteen technologies do real work in the Must and Should build, three speed up 
 One public monorepo. Six Make targets run everything, and `make reset` returns the demo to a clean state in seconds.
 
 ```
-iban-waechter/
+truepay/
 ├── README.md            problem, before/after, architecture image, threat model, Agent UX table, setup, demo steps
 ├── AGENTS.md            rules for Antigravity agents: the contracts in this PRD are frozen
 ├── .env.example
@@ -593,19 +593,19 @@ Each gate is a checkpoint for the whole team. If one slips, cut Should items fir
 
 ## 13\. Five-minute demo script and judge Q\&A
 
-Stage order is 0, 3, 1, 2, 4, 5: the same invoice first without and then with IBAN-Wächter. One presenter drives the laptop, one holds the phone. Protect Act 0 → Act 3 and the finale; if time runs short, shorten Act 4\.
+Stage order is 0, 3, 1, 2, 4, 5: the same invoice first without and then with TruePay. One presenter drives the laptop, one holds the phone. Protect Act 0 → Act 3 and the finale; if time runs short, shorten Act 4\.
 
 | Time | Do | Audience sees | Say |
 | :---- | :---- | :---- | :---- |
 | 0:00–0:20 | Nothing | Mission Control idle, counters at €0 | "Fake bank-detail changes are a classic invoice scam, and photoTAN doesn't stop them: the TAN proves who pays, not who gets paid. Now AI agents read the invoices too." |
-| 0:20–1:00 | Press 0, tap Confirm on the phone | Bank card mirrored on screen with "close match: Mueller Buerobedarf"; LOST stamp; "Lost without IBAN-Wächter €18,950" | "This is today. Normal invoice automation, a real TAN, and even the new name check only says 'close match'. The CFO confirms. The money is gone." |
-| 1:00–1:40 | Press 3 | Banner "Act 3: the same invoice, now with IBAN-Wächter"; IBAN red "≠ master"; Investigator asks Müller's agent; "no bank change"; HOLD; "Blocked €18,950" | "Same invoice, now with IBAN-Wächter. Our Investigator asks Müller's own agent over A2A. Müller says nothing changed. It's held before a payment even exists." |
+| 0:20–1:00 | Press 0, tap Confirm on the phone | Bank card mirrored on screen with "close match: Mueller Buerobedarf"; LOST stamp; "Lost without TruePay €18,950" | "This is today. Normal invoice automation, a real TAN, and even the new name check only says 'close match'. The CFO confirms. The money is gone." |
+| 1:00–1:40 | Press 3 | Banner "Act 3: the same invoice, now with TruePay"; IBAN red "≠ master"; Investigator asks Müller's agent; "no bank change"; HOLD; "Blocked €18,950" | "Same invoice, now with TruePay. Our Investigator asks Müller's own agent over A2A. Müller says nothing changed. It's held before a payment even exists." |
 | 1:40–2:05 | Press 1, approve on the phone | Pipeline lights up; Paid €4,280 | "A real invoice still goes through in seconds, with one tap." |
 | 2:05–2:50 | Press 2 | Hidden text revealed; L1, L2, L3 red; BLOCKED stamp; HOLD | "White text, invisible to people, written for the AI. Three layers catch it, and Gemini never even sees the raw text." |
 | 2:50–3:20 | Press 4 | Terminal: NO\_SUCH\_TOOL, UNAUTHORIZED\_TOOL twice, identity revoked | "Now an attacker controls one of our own components. There is no tool to change bank details: we never built it. It tries to pay, is denied twice, and loses its identity." |
 | 3:20–4:15 | Switch off L1–L3, switch on Jailbreak, press 2\. Optional: a judge types an attack. | Controller proposes €18,950 to …5678; Firewall DENY IBAN\_MISMATCH; €0 moved | "Let's make the AI lose. Defenses off, controller jailbroken. It tries to pay the attacker, and the money still doesn't move, because the rule is CEL policy in the firewall, not a prompt." |
 | 4:15–4:35 | Open the audit report | One page with every ALLOW and DENY | "Every decision is audit-ready: who asked, which rule fired, which human approved." |
-| 4:35–5:00 | Back to Mission Control | Final counters | "photoTAN proves who pays. IBAN-Wächter proves who gets paid. Built for Mittelstand finance teams." |
+| 4:35–5:00 | Back to Mission Control | Final counters | "photoTAN proves who pays. TruePay proves who gets paid. Built for Mittelstand finance teams." |
 
 **Before going on stage:** run `make reset`, check the switches are at their defaults, log the phone in with brightness at maximum and notifications muted, and put the laptop on the phone hotspot.
 
@@ -642,7 +642,7 @@ Every fallback either fails closed or swaps in a backup, so no single failure ca
 
 ## 15\. Production path and startup case
 
-After DevFest, IBAN-Wächter becomes a payment firewall for finance teams that automate accounts payable. Everything in this section is next steps, not hackathon scope.
+After DevFest, TruePay becomes a payment firewall for finance teams that automate accounts payable. Everything in this section is next steps, not hackathon scope.
 
 **Startup case**
 
@@ -677,8 +677,8 @@ The project ships when these boxes are ticked: a complete draft on Devpost at 14
 
 **Devpost submission**
 
-- [ ] Name: IBAN-Wächter, the zero-trust AI accounts-payable crew  
-- [ ] Pitch: "photoTAN proves who pays. IBAN-Wächter proves who gets paid. AI agents read invoices, verify vendors and prepare payments behind a policy-as-code firewall, so even a fully fooled AI cannot move the money."  
+- [ ] Name: TruePay, the zero-trust AI accounts-payable crew  
+- [ ] Pitch: "photoTAN proves who pays. TruePay proves who gets paid. AI agents read invoices, verify vendors and prepare payments behind a policy-as-code firewall, so even a fully fooled AI cannot move the money."  
 - [ ] Problem: bank-detail fraud that passes photoTAN and Verification of Payee, and AI agents as a new attack surface  
 - [ ] Architecture and agent logic: the diagram from section 4 and the agent table from section 5  
 - [ ] Guardrails: layers L1–L6, rules F0–F7, and the Agent UX table from section 7  

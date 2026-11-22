@@ -27,7 +27,7 @@ gcloud model-armor templates create iw-invoice --location=europe-west3 \
   --malicious-uri-filter-settings-enforcement=enabled || echo "template exists?"
 
 # 5. Service account with datastore.user + modelarmor.user, key saved as sa.json (git-ignored)
-gcloud iam service-accounts create "$SA_NAME" --display-name="IBAN-Wächter backend" 2>/dev/null || true
+gcloud iam service-accounts create "$SA_NAME" --display-name="TruePay backend" 2>/dev/null || true
 for role in roles/datastore.user roles/modelarmor.user; do
   gcloud projects add-iam-policy-binding "$GCP_PROJECT" --member="serviceAccount:$SA_EMAIL" \
     --role="$role" --condition=None -q >/dev/null
@@ -45,4 +45,4 @@ sed -i "s|^GCP_PROJECT=.*|GCP_PROJECT=$GCP_PROJECT|; /^MODEL_ARMOR_TEMPLATE=/s|<
 ollama pull gemma4:e4b || echo "WARNING: ollama pull failed; upgrade Ollama or set SENTINEL_BACKEND=api"
 
 echo
-echo "Done. Share the Sheet 'IBAN-Wächter Master' with $SA_EMAIL as Editor and put its id in SHEET_ID."
+echo "Done. Share the Sheet 'TruePay Master' with $SA_EMAIL as Editor and put its id in SHEET_ID."

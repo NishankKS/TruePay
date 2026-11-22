@@ -57,7 +57,7 @@ and fills `GCP_PROJECT` and `MODEL_ARMOR_TEMPLATE` in `.env`. The generated toke
 3. In AI Studio's model list, confirm that `CONTROLLER_MODEL` and `WORKER_MODEL` exist. If not, put the closest
    current ids in `.env` (one line each).
 
-## 5. Google Sheet "IBAN-Wächter Master"
+## 5. Google Sheet "TruePay Master"
 
 1. Create an empty Google Sheet with that name.
 2. **Share** it with `iw-backend@<project-id>.iam.gserviceaccount.com` as **Editor**.
@@ -76,7 +76,7 @@ and fills `GCP_PROJECT` and `MODEL_ARMOR_TEMPLATE` in `.env`. The generated toke
 ```bash
 firebase login
 firebase use <project-id>
-firebase apps:create web iban-waechter      # once
+firebase apps:create web truepay      # once
 make app/firebase.web.json                  # writes the web config the Flutter app reads
 ```
 
@@ -98,27 +98,17 @@ Fallback without Hosting: `cd app && flutter run -d chrome --dart-define-from-fi
 
 ```bash
 make emu                                                   # terminal 1: Firestore :8085 + Auth :9099, real rules
-export FIRESTORE_EMULATOR_HOST=localhost:8085 GCP_PROJECT=demo-iw
+export FIRESTORE_EMULATOR_HOST=localhost:8085 GCP_PROJECT=demo-truepay
 .venv/bin/python -m backend.scripts.emu_seed               # config + operator/approver (password demo1234)
-.venv/bin/python -m backend.scripts.fake_run               # scripted Act 2 events for the UI
 cd app && flutter run -d chrome --dart-define=EMULATOR=true   # Mission Control; /approve for the phone
 ```
 
 Act 4 and Act 0 also run fully on the emulator (no Gemini needed). Acts 1–3 and 5 need `GOOGLE_API_KEY` and the Sheet.
 
-## Optional (Should) extras
-
-**Genkit AI summary on the audit report.** Needs the Blaze plan. Run `make functions`; it asks for the Gemini key once and
-stores it as a function secret. The report shows the summary when the function answers and hides it otherwise.
-
-**Müller's vendor agent on Cloud Run.** Run `make vendor-cloudrun`. It deploys `Dockerfile` (vendor agent only, no secrets
-in the image), sets `PUBLIC_URL`, and prints the URL. Put that URL in the Sheet's `vendors.a2a_url` and restart the runner.
+## Optional extra
 
 **AppSheet finance console** (no code, about 5 minutes):
-1. <https://www.appsheet.com/>: **Create**, then **App**, then **Start with existing data**, then pick the "IBAN-Wächter Master" Sheet.
+1. <https://www.appsheet.com/>: **Create**, then **App**, then **Start with existing data**, then pick the "TruePay Master" Sheet.
 2. Tables `vendors` (editable: `iban`, `a2a_url`, `status`), `purchase_orders` (read-only), `audit_ledger` (read-only).
 3. Use a deck view on `audit_ledger` sorted by `ts` descending, and a form view on `vendors`.
 4. This is the **only** place a person changes bank details. Agents have no tool for it.
-
-**Android build.** Needs the Android SDK and `google-services.json` from the Firebase console (Project settings, Android app
-`com.example.iban_waechter`). Then: `cd app && flutter build apk`.

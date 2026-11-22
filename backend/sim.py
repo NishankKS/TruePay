@@ -1,4 +1,4 @@
-"""IW_SIM=1: keyless rehearsal mode (scripts/sim.sh). NOT the product's AI path.
+"""TP_SIM=1: keyless rehearsal mode (scripts/sim.sh). NOT the product's AI path.
 
 Scripted stand-ins for the four parts that need cloud keys:
   - Model Armor  -> regex for injection phrases

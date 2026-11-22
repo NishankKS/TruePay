@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
@@ -73,7 +72,6 @@ class ReportScreen extends StatelessWidget {
                       ]),
                       const SizedBox(height: 8),
                       Text('For comparison, the Act 0 baseline lost €18,950.', style: rs(c: const Color(0xFFC21F3A))),
-                      const AiSummary(),
                       const SizedBox(height: 16),
                       Table(
                         columnWidths: const {
@@ -107,36 +105,4 @@ class ReportScreen extends StatelessWidget {
       );
 
   Widget _c(Widget w) => Padding(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3), child: w);
-}
-
-/// Genkit `auditSummary` callable (Should). Hidden entirely if it fails or is not deployed.
-class AiSummary extends StatefulWidget {
-  const AiSummary({super.key});
-  @override
-  State<AiSummary> createState() => _AiSummaryState();
-}
-
-class _AiSummaryState extends State<AiSummary> {
-  late final Future<String?> _f = FirebaseFunctions.instanceFor(region: 'europe-west3')
-      .httpsCallable('auditSummary', options: HttpsCallableOptions(timeout: const Duration(seconds: 20)))
-      .call()
-      .then((r) => r.data as String?)
-      .catchError((_) => null);
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder<String?>(
-        future: _f,
-        builder: (_, s) => (s.data == null || s.data!.isEmpty)
-            ? const SizedBox.shrink()
-            : Container(
-                margin: const EdgeInsets.only(top: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: rCard(color: const Color(0xFFF5F7FA)),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('AI summary (Genkit)', style: rs(size: 12.5, w: FontWeight.w600, c: rMuted)),
-                  const SizedBox(height: 4),
-                  Text(s.data!, style: rs()),
-                ]),
-              ),
-      );
 }

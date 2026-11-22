@@ -1,5 +1,5 @@
 """Local dev only: seed the Firestore+Auth emulators (make emu) with config and the two demo users.
-FIRESTORE_EMULATOR_HOST=localhost:8085 GCP_PROJECT=demo-iw python -m backend.scripts.emu_seed"""
+FIRESTORE_EMULATOR_HOST=localhost:8085 GCP_PROJECT=demo-truepay python -m backend.scripts.emu_seed"""
 import json
 import os
 import urllib.request
